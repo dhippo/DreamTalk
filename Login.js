@@ -1,25 +1,33 @@
 // Login.js
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './firebaseConfig';
 
 const Login = ({ navigation }) => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const handleLogin = () => {
-        // Ici, vous pouvez ajouter la logique de vérification des identifiants
-        console.log(username, password);
-        // Navigation après connexion (exemple : navigation vers 'Page1')
-        navigation.navigate('Page1');
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredentials) => {
+                const user = userCredentials.user;
+                console.log('Logged in with:', user.email);
+                navigation.navigate('Home');
+            })
+            .catch((error) => {
+                alert(error.message);
+            });
     };
 
     return (
         <View style={styles.container}>
             <TextInput
                 style={styles.input}
-                placeholder="Username"
-                value={username}
-                onChangeText={setUsername}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
             />
             <TextInput
                 style={styles.input}
@@ -40,12 +48,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     input: {
-        width: 200,
-        height: 40,
+        width: 300,
+        height: 50,
         padding: 10,
         borderWidth: 1,
         borderColor: 'gray',
-        marginBottom: 10,
+        marginBottom: 15,
+        borderRadius: 5,
     },
 });
 
