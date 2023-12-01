@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from './firebaseConfig'; // Make sure the path is correct
+import { auth } from '../../firebaseConfig'; // Make sure the path is correct
 
 const Register = ({ navigation }) => {
     const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ const Register = ({ navigation }) => {
             .then((userCredentials) => {
                 const user = userCredentials.user;
                 console.log('Registered with:', user.email);
-                navigation.navigate('Login');
+                navigation.replace('Home');
             })
             .catch((error) => {
                 alert(error.message);

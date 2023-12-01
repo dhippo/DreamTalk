@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from './firebaseConfig';
+import { auth } from '../../firebaseConfig';
 
 const Login = ({ navigation }) => {
     const [email, setEmail] = useState('');
@@ -13,7 +13,7 @@ const Login = ({ navigation }) => {
             .then((userCredentials) => {
                 const user = userCredentials.user;
                 console.log('Logged in with:', user.email);
-                navigation.navigate('Home');
+                navigation.replace('Home');
             })
             .catch((error) => {
                 alert(error.message);
