@@ -1,6 +1,8 @@
 // Register.js
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './firebaseConfig'; // Make sure the path is correct
 
 const Register = ({ navigation }) => {
     const [email, setEmail] = useState('');
@@ -8,16 +10,20 @@ const Register = ({ navigation }) => {
     const [confirmPassword, setConfirmPassword] = useState('');
 
     const handleRegister = () => {
-        // Ici, ajoutez votre logique pour l'inscription
-        // Par exemple, vérifiez si les mots de passe correspondent et envoyez les données à un serveur
         if (password !== confirmPassword) {
             alert("Passwords don't match!");
             return;
         }
 
-        console.log(email, password, confirmPassword);
-        // Vous pouvez naviguer vers un autre écran après l'inscription
-        // Par exemple: navigation.navigate('Login');
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredentials) => {
+                const user = userCredentials.user;
+                console.log('Registered with:', user.email);
+                navigation.navigate('Login');
+            })
+            .catch((error) => {
+                alert(error.message);
+            });
     };
 
     return (
@@ -55,12 +61,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     input: {
-        width: 200,
-        height: 40,
+        width: 300,
+        height: 50,
         padding: 10,
         borderWidth: 1,
         borderColor: 'gray',
-        marginBottom: 10,
+        marginBottom: 15,
+        borderRadius: 5,
     },
 });
 
