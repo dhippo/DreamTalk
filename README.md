@@ -9,6 +9,11 @@ Il s'agit d'une application qui utilisera l'API d'Open AI pour générer des ré
 
 Les données des utilisateurs seront stockées dans une base de données FireBase.
 
+## Démarrer l'appli 
+```bash
+npx expo start
+```
+
 ## Étape du projet 
 
 - Compréhension de la syntaxe React Native
