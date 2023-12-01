@@ -1,31 +1,42 @@
-import { StatusBar } from 'expo-status-bar';
-import {StyleSheet, Text, View} from 'react-native';
-import { PaperProvider } from 'react-native-paper';
-import { Button } from 'react-native-paper';
+// App.js
+import * as React from 'react';
+import { Button, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+const Stack = createNativeStackNavigator();
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Bienvenue sur l'application DreamTalk!</Text>
-      <StatusBar style="auto" />
-        <Button icon="camera" title="Press me" >
-            Press me
-        </Button>
-        <Button  title="Presse" icon={{ uri: 'https://avatars0.githubusercontent.com/u/17571969?v=3&s=400' }}>
-            Press me
-        </Button>
-
-    </View>
-
-);
+function Page1({ navigation }) {
+    return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <Text>Page 1</Text>
+            <Button
+                title="Go to Page 2"
+                onPress={() => navigation.navigate('Page2')}
+            />
+        </View>
+    );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+function Page2({ navigation }) {
+    return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <Text>Page 2</Text>
+            <Button
+                title="Go to Page 1"
+                onPress={() => navigation.navigate('Page1')}
+            />
+        </View>
+    );
+}
+
+export default function App() {
+    return (
+        <NavigationContainer>
+            <Stack.Navigator>
+                <Stack.Screen name="Page1" component={Page1} />
+                <Stack.Screen name="Page2" component={Page2} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}

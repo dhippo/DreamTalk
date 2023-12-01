@@ -1,4 +1,4 @@
-# Dream Talk • Application React Native
+# Dream Talk • Application Expo App (React Native)
 
 Le projet Dream Talk est une application mobile de messagerie développée
 en React Native. Elle permet à des utilisateurs de s'inscrire, 
