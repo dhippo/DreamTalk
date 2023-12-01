@@ -11,7 +11,7 @@ const Register = ({ navigation }) => {
         // Ici, ajoutez votre logique pour l'inscription
         // Par exemple, vérifiez si les mots de passe correspondent et envoyez les données à un serveur
         if (password !== confirmPassword) {
-            alert("Passwords don't match!");
+            alert("Les mots de passes sont differents!");
             return;
         }
 

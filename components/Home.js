@@ -18,6 +18,10 @@ function Home({ navigation }) {
                 title="Go to Register"
                 onPress={() => navigation.navigate('Register')}
             />
+            <Button
+                title="Go to vitrine 1"
+                onPress={() => navigation.navigate('Vitrine1')}
+            />
         </View>
     );
 }
