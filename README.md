@@ -11,12 +11,34 @@ Les données des utilisateurs seront stockées dans une base de données FireBas
 
 ## Démarrer l'appli 
 ```bash
+sudo npm install
+```
+```bash
+sudo npx expo install --fix
+```
+```bash
 npx expo start
 ```
 
 ## Étape du projet 
 
-- Compréhension de la syntaxe React Native
-- Création des premiers composants
-- Création du premier écran
-- Création du premier formulaire
+- Compréhension de la syntaxe React Native 💭
+- Création des premiers composants ✅
+- Création du premier écran ✅
+- Création du premier formulaire ✅
+- Authentification ✅
+- Conception de la base de données 🔜
+- Page de profil : ajouts et modifications, infos persos 🔜
+- Définir 5 héros fictifs, enregistrements BDD 🔜
+- Page de choix d'un héro 🔜
+- Implémentation de l'API Open AI 🔜
+- Discussions, gestion des données 🔜
+- Création de la page de création de discussion 🔜
+- 
+
+
+## Screens du 15 décembre 2023
+
+### aperçu de l'app (3 écrans)
+![screen1](assets/screens/IMG_1571.jpg)
+![screen2](assets/screens/IMG_1572.jpg)
