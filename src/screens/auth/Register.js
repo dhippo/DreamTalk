@@ -1,18 +1,24 @@
-// Login.js
+// Register.js
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../../firebaseConfig'; // Make sure the path is correct
 
-const Login = ({ navigation }) => {
+const Register = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
-    const handleLogin = () => {
-        signInWithEmailAndPassword(auth, email, password)
+    const handleRegister = () => {
+        if (password !== confirmPassword) {
+            alert("Passwords don't match!");
+            return;
+        }
+
+        createUserWithEmailAndPassword(auth, email, password)
             .then((userCredentials) => {
                 const user = userCredentials.user;
-                console.log('Logged in with:', user.email);
+                console.log('Registered with:', user.email);
                 navigation.replace('Home');
             })
             .catch((error) => {
@@ -36,7 +42,14 @@ const Login = ({ navigation }) => {
                 onChangeText={setPassword}
                 secureTextEntry
             />
-            <Button title="Login" onPress={handleLogin} />
+            <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+            />
+            <Button title="Register" onPress={handleRegister} />
         </View>
     );
 };
@@ -58,4 +71,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Login;
+export default Register;

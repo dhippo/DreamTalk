@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, ImageBackground, StyleSheet } from 'react
 const WelcomeScreen1 = ({ navigation }) => {
     return (
         <ImageBackground
-            source={require('../../../DreamTalk/assets/fondHeros.jpeg')}
+            source={require('../../../assets/fondHeros.jpeg')}
             style={styles.background}
         >
             <View style={styles.container}>

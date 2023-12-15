@@ -1,0 +1,1 @@
+//faire le get de toutes les informations que l'on souhaite récupéreer de l'api
