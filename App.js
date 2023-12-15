@@ -13,12 +13,12 @@ export default function App() {
     return (
         <NavigationContainer>
             <Stack.Navigator initialRouteName="WelcomeScreen1">
-                <Stack.Screen name="Login" component={Login} />
-                <Stack.Screen name="Home" component={Home} />
-                <Stack.Screen name="Register" component={Register} />
-                <Stack.Screen name="WelcomeScreen1" component={WelcomeScreen1} />
+                <Stack.Screen name="Login" component={Login} options={{headerShown:false}} />
+                <Stack.Screen name="Home" component={Home} options={{headerShown:false}} />
+                <Stack.Screen name="Register" component={Register} options={{headerShown:false}} />
+                <Stack.Screen name="WelcomeScreen1" component={WelcomeScreen1} options={{headerShown:false}} />
             </Stack.Navigator>
         </NavigationContainer>
-        //todo : ajouter la navbar
+        //todo : ajouter la navbar sur toutes les pages sauf la page de welcomeScreen, de connexion et d'inscription
     );
 }
