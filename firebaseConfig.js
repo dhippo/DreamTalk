@@ -1,24 +1,40 @@
-// firebaseConfig.js
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { getDatabase } from 'firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+    FIREBASE_API_KEY,
+    FIREBASE_AUTH_DOMAIN,
+    FIREBASE_PROJECT_ID,
+    FIREBASE_STORAGE_BUCKET,
+    FIREBASE_MESSAGING_SENDER_ID,
+    FIREBASE_APP_ID,
+    FIREBASE_MEASUREMENT_ID,
+    FIREBASE_DATABASE_URL
+} from "@env";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCuts-N1bPLc9Kr1cwkhvL6pCQGJTxys88",
-    authDomain: "dreamtalk-f6108.firebaseapp.com",
-    projectId: "dreamtalk-f6108",
-    storageBucket: "dreamtalk-f6108.appspot.com",
-    messagingSenderId: "550251729643",
-    appId: "1:550251729643:web:eb985cdbd4f1e86e05a4ae",
-    measurementId: "G-86BYT1YWLP"
+    apiKey: FIREBASE_API_KEY,
+    authDomain: FIREBASE_AUTH_DOMAIN,
+    projectId: FIREBASE_PROJECT_ID,
+    storageBucket: FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
+    appId: FIREBASE_APP_ID,
+    measurementId: FIREBASE_MEASUREMENT_ID,
+    databaseURL: FIREBASE_DATABASE_URL
 };
 
-const app = initializeApp(firebaseConfig);
-
-initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-});
+let app;
+if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+    initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage)
+    });
+} else {
+    app = getApps()[0];
+}
 
 const auth = getAuth(app);
+export const database = getDatabase(app);
 
 export { auth };
