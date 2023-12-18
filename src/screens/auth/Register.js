@@ -1,8 +1,9 @@
 // Register.js
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../../firebaseConfig'; // Make sure the path is correct
+import { auth } from '../../../firebaseConfig';
+import {MaterialIcons} from "@expo/vector-icons";
 
 const Register = ({ navigation }) => {
     const [email, setEmail] = useState('');
@@ -28,6 +29,9 @@ const Register = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                <MaterialIcons name="arrow-back" size={32} color="black" />
+            </TouchableOpacity>
             <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -49,7 +53,9 @@ const Register = ({ navigation }) => {
                 onChangeText={setConfirmPassword}
                 secureTextEntry
             />
-            <Button title="Register" onPress={handleRegister} />
+            <TouchableOpacity style={styles.button} onPress={handleRegister}>
+                <Text style={styles.buttonText}>Register</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -59,15 +65,35 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        padding: 20,
+        backgroundColor: 'white',
     },
     input: {
-        width: 300,
+        width: '100%',
         height: 50,
         padding: 10,
         borderWidth: 1,
-        borderColor: 'gray',
+        borderColor: 'orange',
         marginBottom: 15,
         borderRadius: 5,
+    },
+    button: {
+        width: '100%',
+        backgroundColor: 'orange',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    backButton: {
+        position: 'absolute',
+        height: 50,
+        top: 80,
+        left: 10,
     },
 });
 

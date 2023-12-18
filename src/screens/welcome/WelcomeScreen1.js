@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, ImageBackground, StyleSheet } from 'react
 const WelcomeScreen1 = ({ navigation }) => {
     return (
         <ImageBackground
-            source={require('../../../assets/fondHeros.jpeg')}
+            source={require('../../../assets/images/fondHeros.jpeg')}
             style={styles.background}
         >
             <View style={styles.container}>
@@ -23,7 +23,7 @@ const WelcomeScreen1 = ({ navigation }) => {
                     style={styles.button}
                     onPress={() => navigation.navigate('Login')}
                 >
-                    <Text style={styles.buttonText}>Login</Text>
+                    <Text style={styles.buttonText}>Se connecter</Text>
                 </TouchableOpacity>
             </View>
         </ImageBackground>
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
         width: '80%',
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         color: 'white',
         textAlign: 'center',
         marginBottom: 20,
@@ -56,9 +56,9 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     buttonText: {
-        color: 'red',
+        color: 'orange',
         fontWeight: 'bold',
-        fontSize: 18,
+        fontSize: 24,
         },
 });
 
