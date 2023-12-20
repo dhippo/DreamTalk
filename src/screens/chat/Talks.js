@@ -1,24 +1,29 @@
-// sur cette page: bouton nouvelle discussion NewTalk.js et bouton créer un agent NewAgent.js
-// avec une barre de recherche et en dessous une liste des dernières discussions
 
-import React from 'react';
-import { View, Text, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { View, TextInput, Button, Text } from 'react-native';
+import { chatWithOpenAi } from '../../../api';
 
 const Talks = () => {
-    // Exemple de données pour les discussions
-    const talks = [
-        { id: '1', title: 'Discussion avec Alice' },
-        { id: '2', title: 'Discussion avec Bob' },
-    ];
+    const [userInput, setUserInput] = useState('');
+    const [response, setResponse] = useState('');
+
+    const handleSend = async () => {
+        const preprompt = "Réponds comme si tu étais Superman: ";
+        const fullMessage = preprompt + userInput;
+        const aiResponse = await chatWithOpenAi(fullMessage);
+        setResponse(aiResponse);
+    };
 
     return (
         <View>
-            <Text>Liste des Discussions</Text>
-            <FlatList
-                data={talks}
-                renderItem={({ item }) => <Text>{item.title}</Text>}
-                keyExtractor={item => item.id}
+            <TextInput
+                placeholder="Posez votre question à Superman..."
+                value={userInput}
+                onChangeText={setUserInput}
             />
+            <Button title="Envoyer" onPress={handleSend} />
+            <Text>Réponse de Superman: {response}</Text>
+
         </View>
     );
 };

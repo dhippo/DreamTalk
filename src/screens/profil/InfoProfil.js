@@ -16,7 +16,9 @@ const InfoProfil = ({ navigation }) => {
     useEffect(() => {
         const user = auth.currentUser;
         if (user) {
-            // Récupération de l'email depuis son id de l'authentification Firebase
+
+            // Récupération de l'email depuis l'authentification Firebase
+
             const userEmail = user.email || '';
 
             const profileRef = ref(database, `users/${user.uid}/profile`);
