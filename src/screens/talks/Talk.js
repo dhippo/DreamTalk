@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text } from 'react-native';
 import { chatWithOpenAi } from '../../../api';
 
-const Talks = () => {
+const Talk = () => {
     const [userInput, setUserInput] = useState('');
     const [response, setResponse] = useState('');
 
@@ -28,4 +28,4 @@ const Talks = () => {
     );
 };
 
-export default Talks;
+export default Talk;

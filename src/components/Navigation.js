@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Talks from '../screens/chat/Talks';
+import TalksStack from '../screens/talks/TalksStack';
 import InfoProfil from '../screens/profil/InfoProfil';
 import { MaterialIcons } from '@expo/vector-icons';
 import ContactsStack from "../screens/contact/ContactsStack";
@@ -39,7 +39,7 @@ export default function Navigation() {
             })}
         >
             <Tab.Screen name="Contacts" component={ContactsStack} />
-            <Tab.Screen name="Discussions" component={Talks} />
+            <Tab.Screen name="Discussions" component={TalksStack} />
             <Tab.Screen name="Profil" component={ProfileStack} />
 
         </Tab.Navigator>
