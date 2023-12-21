@@ -1,27 +1,55 @@
-// DreamTalk/src/screens/contact/NewTalk.js
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+// src/screens/chat/FriendChat.js
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { database } from '../../../firebaseConfig';
+import { ref, set, push } from 'firebase/database';
+import { auth } from '../../../firebaseConfig';
 import { MaterialIcons } from "@expo/vector-icons";
 
-const NewTalk = ({ navigation }) => {
+const NewFriendChat = ({ navigation }) => {
+    const [emailFriend, setEmailFriend] = useState('');
+
+    const handleCreateFriendChat = () => {
+        if (auth.currentUser) {
+            const userId = auth.currentUser.uid;
+            const emailStarter = auth.currentUser.email;
+            const newDiscussionRef = push(ref(database, 'discussions'));
+            set(newDiscussionRef, {
+                emailStarter,
+                emailTalkWith: emailFriend
+            })
+                .then(() => {
+                    const discussionId = newDiscussionRef.key;
+                    navigation.navigate('FriendChat', { discussionId, emailFriend });
+                })
+                .catch((error) => {
+                    Alert.alert("Erreur", error.message);
+                });
+        } else {
+            Alert.alert("Erreur", "Aucun utilisateur connecté");
+        }
+    };
 
     return (
         <View style={styles.container}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                 <MaterialIcons name="arrow-back" size={32} color="black" />
             </TouchableOpacity>
-            <Text style={styles.title}>Nouvelle Discussion</Text>
-
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('FriendChat')}>
-                <Text style={styles.buttonText}>Discuter avec un ami</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('NewAgent')}>
-                <Text style={styles.buttonText}>Discuter avec une IA</Text>
+            <Text style={styles.title}>Donnez l'adresse mail de l'ami avec qui vous voulez discuter</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Email de l'ami"
+                value={emailFriend}
+                onChangeText={setEmailFriend}
+            />
+            <TouchableOpacity style={styles.button} onPress={handleCreateFriendChat}>
+                <Text style={styles.buttonText}>Créer la Discussion</Text>
             </TouchableOpacity>
         </View>
     );
 };
+
+
 
 const styles = StyleSheet.create({
     container: {
@@ -74,4 +102,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default NewTalk;
+export default NewFriendChat;

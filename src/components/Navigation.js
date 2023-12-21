@@ -5,6 +5,7 @@ import InfoProfil from '../screens/profil/InfoProfil';
 import { MaterialIcons } from '@expo/vector-icons';
 import ContactsStack from "../screens/contact/ContactsStack";
 import ProfileStack from "../screens/profil/ProfileStack";
+import ChatStack from "../screens/chat/ChatStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -39,7 +40,7 @@ export default function Navigation() {
             })}
         >
             <Tab.Screen name="Contacts" component={ContactsStack} />
-            <Tab.Screen name="Discussions" component={Talks} />
+            <Tab.Screen name="Discussions" component={ChatStack} />
             <Tab.Screen name="Profil" component={ProfileStack} />
 
         </Tab.Navigator>

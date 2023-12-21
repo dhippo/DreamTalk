@@ -27,11 +27,10 @@ npx expo start
 - Création du premier écran ✅
 - Création du premier formulaire ✅
 - Authentification ✅
-- Conception de la base de données 🔜
-- Page de profil : ajouts et modifications, infos persos 🔜
-- Définir 5 héros fictifs, enregistrements BDD 🔜
+- Conception de la base de données ✅
+- Page de profil : ajouts et modifications, infos persos ✅
+- Implémentation de l'API Open AI ✅
 - Page de choix d'un héro 🔜
-- Implémentation de l'API Open AI 🔜
 - Discussions, gestion des données 🔜
 - Création de la page de création de discussion 🔜
 - 
@@ -42,3 +41,11 @@ npx expo start
 ### aperçu de l'app (3 écrans)
 ![screen1](assets/screens/IMG_1571.jpg)
 ![screen2](assets/screens/IMG_1572.jpg)
+
+## Prompt pour la création d'un nouvel Agent
+
+```bash
+Tu dois seulement répondre par oui ou par non :
+
+Si tu étais configuré pour etre un chatbot conversationnel et que tu devais incarner une célébrité, un personnage réel ou fictif connu. Si je te disais d'incarner "La Tour Eiffel", considererai tu cela comme un bon personnage à configurer ?
+```

@@ -18,7 +18,8 @@ export const chatWithOpenAi = async (message) => {
         const response = await openAiApi.post('/chat/completions', {
             model: "gpt-3.5-turbo",
             messages: [{ role: "user", content: message }],
-            temperature: 0.7
+            temperature: 0.7,
+            max_tokens: 150
         });
         return response.data.choices[0].message.content;
     } catch (error) {
