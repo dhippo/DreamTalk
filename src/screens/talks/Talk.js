@@ -1,33 +1,3 @@
-// import React, { useState } from 'react';
-// import { View, TextInput, Button, Text } from 'react-native';
-// import { chatWithOpenAi } from '../../../api';
-
-// const Talk = () => {
-//     const [userInput, setUserInput] = useState('');
-//     const [response, setResponse] = useState('');
-
-//     const handleSend = async () => {
-//         const preprompt = "Réponds comme si tu étais Superman: ";
-//         const fullMessage = preprompt + userInput;
-//         const aiResponse = await chatWithOpenAi(fullMessage);
-//         setResponse(aiResponse);
-//     };
-
-//     return (
-//         <View>
-//             <TextInput
-//                 placeholder="Posez votre question à Superman..."
-//                 value={userInput}
-//                 onChangeText={setUserInput}
-//             />
-//             <Button title="Envoyer" onPress={handleSend} />
-//             <Text>Réponse de Superman: {response}</Text>
-//         </View>
-//     );
-// };
-
-// export default Talk;
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { getDatabase, ref, push, get, onValue } from 'firebase/database'; // Importez les fonctions nécessaires
@@ -38,57 +8,53 @@ const Talk = ({ route, navigation }) => {
     const { talkId } = route.params;
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
-    const messagesRef = ref(getDatabase(), `talks/${talkId}/messages`);
-    
-    const handleEditContact = () => {
-        navigation.navigate('EditContact', { contact });
-    };
-
+    console.log(messages)
     useEffect(() => {
-        const messagesRef = ref(getDatabase(), `talks/${talkId}/messages`);
-      
         // Récupération initiale des messages
         const fetchMessages = async () => {
-          try {
-            const snapshot = await get(messagesRef);
+            const snapshot = await get(ref(getDatabase(), `talks/${talkId}/messages`));
             if (snapshot.exists()) {
-              const loadedMessages = Object.entries(snapshot.val())
-                .map(([key, value]) => ({ id: key, ...value }))
-                .sort((a, b) => b.timestamp - a.timestamp); // Assurez-vous que le tri est correct
-              setMessages(loadedMessages);
+                const loadedMessages = Object.entries(snapshot.val())
+                    .map(([key, msgData]) => {
+                        return {
+                            id: key,
+                            ...msgData
+                        };
+                    })
+                    // Tri par timestamp décroissant
+                    .sort((a, b) => b.timestamp - a.timestamp);
+
+                setMessages(loadedMessages);
+                // console.log(loadedMessages);
             } else {
-              setMessages([]);
+                setMessages([]);
             }
-          } catch (error) {
-            console.error('Erreur lors de la récupération des messages:', error);
-            setMessages([]);
-          }
         };
-      
+
         fetchMessages();
-      
-        // Écoute des changements en temps réel
-        const unsubscribe = onValue(messagesRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const updatedMessages = Object.entries(snapshot.val())
-              .map(([key, value]) => ({ id: key, ...value }))
-              .sort((a, b) => b.timestamp - a.timestamp);
-            setMessages(updatedMessages);
-          } else {
-            setMessages([]);
-          }
-        }, {
-          onlyOnce: false
+
+        const unsubscribe = onValue(ref(getDatabase(), `talks/${talkId}/messages`), (snapshot) => {
+            if (snapshot.exists()) {
+                const updatedMessages = Object.entries(snapshot.val())
+                    .map(([key, msgData]) => {
+                        return {
+                            id: key,
+                            ...msgData
+                        };
+                    })
+                    .sort((a, b) => b.timestamp - a.timestamp);
+
+                setMessages(updatedMessages);
+            } else {
+                setMessages([]);
+            }
         });
-      
+
         // Fonction de nettoyage pour désabonner lors du démontage du composant
-        return () => {
-          unsubscribe();
-        };
-      }, [talkId]);
+        return () => unsubscribe();
+    }, [talkId]);
 
-
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (inputText.trim()) {
             const newMessageRef = push(ref(getDatabase(), `talks/${talkId}/messages`));
             const newMessage = {
@@ -97,19 +63,20 @@ const Talk = ({ route, navigation }) => {
                 timestamp: Date.now(),
             };
 
-            // Enregistrez le nouveau message dans Firebase
-            push(newMessageRef, newMessage).then(() => {
-                console.log('Message envoyé');
-            }).catch(error => {
+            try {
+                // Enregistrez le nouveau message dans Firebase
+                await set(newMessageRef, newMessage);
+                setMessages(previousMessages => [newMessage, ...previousMessages]);
+                setInputText('');
+            } catch (error) {
                 console.error('Erreur lors de l\'envoi du message:', error);
-            });
-
-            setMessages(previousMessages => [newMessage, ...previousMessages]);
-            setInputText('');
+                Alert.alert('Erreur', error.message);
+            }
         }
     };
 
     const renderMessageItem = ({ item }) => (
+        // affichage des messages
         <View style={styles.messageItem}>
             <Text style={styles.messageText}>{item.text}</Text>
         </View>
@@ -142,9 +109,7 @@ const Talk = ({ route, navigation }) => {
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
-            <TouchableOpacity style={styles.editButton} onPress={handleEditContact}>
-                <Text style={styles.editButtonText}>Modifier</Text>
-            </TouchableOpacity>
+
         </View>
 
     );
@@ -167,7 +132,7 @@ const styles = StyleSheet.create({
     messageItem: {
         margin: 10,
         padding: 10,
-        backgroundColor: '#e0e0e0',
+        backgroundColor: 'blue',
         borderRadius: 10,
         maxWidth: '80%',
         alignSelf: 'flex-end',

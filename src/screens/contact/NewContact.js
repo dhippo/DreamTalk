@@ -1,5 +1,5 @@
 // DreamTalk/src/screens/contact/NewContact.js
-import React, { useState } from 'react';
+import React, { useState, isLoading } from 'react';
 import { Image, View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 
 import { database } from '../../../firebaseConfig';
@@ -7,13 +7,19 @@ import { ref, set, push } from 'firebase/database';
 
 import { auth } from '../../../firebaseConfig';
 import { MaterialIcons } from "@expo/vector-icons";
+import { verifName } from '../../../api';
 // import { acceptsLanguage } from 'express/lib/request';
 
 const NewContact = ({ navigation }) => {
+    const userId = auth.currentUser.uid;
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeSide, setActiveSide] = useState('right');
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [firstname, setFirstname] = useState('');
-    const [activeSide, setActiveSide] = useState('right');
+
+    const newContactRef = push(ref(database, `users/${userId}/contacts`));
     
     var contact;
     if (activeSide === 'left') {
@@ -22,53 +28,77 @@ const NewContact = ({ navigation }) => {
         contact = "user";
     }
 
-    const handleSaveContact = () => {
-        if (contact === "user") {
-            Alert.alert(contact);
-            if (auth.currentUser) {
-                const userId = auth.currentUser.uid;
-                const newContactRef = push(ref(database, `users/${userId}/contacts`));
-                set(newContactRef, {
-                    name,
-                    firstname,
-                    email
-                })
-                    .then(() => {
-                        Alert.alert("Contact Sauvegardé", `Nom: ${name}\nEmail: ${email}`, [
-                            { text: "OK", onPress: () => navigation.navigate('ContactsList') }
-                        ]);
-                    })
-                    .catch((error) => {
-                        Alert.alert("Erreur", error.message);
-                    });
-            } else {
-                Alert.alert("Erreur", "Aucun utilisateur connecté");
-            }
-        }else{
-            Alert.alert(contact);
-            if (auth.currentUser) {
-                const userId = auth.currentUser.uid;
-                // const prompt = 
-                // "Je suis un utilisateur qui veus parler à "+ name +", je veux donc que tu incarnes"+ name +" en integrant toute sa personnalité et connaissance. Tu dois avoir ses traits de caractère, son vocabulaire et son style. Tu dois t’exprimer exactement comme si je m’adressais à"+ name +". Tu vas commencer la discussion.";
-                const newContactRef = push(ref(database, `users/${userId}/contacts`));
-                
-                set(newContactRef, {
-                    name,
-
-                })
-                    .then(() => {
-                        Alert.alert("Nouvel agent sauvegardé", `Nom: ${name}`, [
-                            { text: "OK", onPress: () => navigation.navigate('ContactsList') }
-                        ]);
-                    })
-                    .catch((error) => {
-                        Alert.alert("Erreur", error.message);
-                    });
-            } else {
-                Alert.alert("Erreur", "Aucun utilisateur connecté");
-            }
-
+    const callApi = async (name) => {
+        // Active le gif
+        setIsLoading(true);
+        const fullMessage = "Tu dois me répondre uniquement par 'Oui' ou par 'Non': Parmi ces propositions ['Personnage réel','Personnage fictif','Objet','Lieu' ], est ce que le mot '"+name+"' peut être considéré comme une référence qui fait partie de ces propositions ?";
+        var aiResponse;
+        console.log(fullMessage);
+        try {
+            aiResponse = await verifName(fullMessage);
+            
+        } catch (error) {
+            Alert.alert("Erreur", error.message);
+        } finally {
+            // Désactive le gif
+            setIsLoading(false); 
+            return aiResponse;
+            // setResponse(aiResponse);
         }
+    };
+
+    const handleSaveContact = () => {
+        callApi(name).then(result => {
+            if (contact === "user") {
+                if (auth.currentUser) {
+                    set(newContactRef, {
+                        type: "user",
+                        name,
+                        firstname,
+                        email
+                    })
+                        .then(() => {
+                            Alert.alert("Contact Sauvegardé", `Nom: ${name}\nEmail: ${email}`, [
+                                { text: "OK", onPress: () => navigation.navigate('ContactsList') }
+                            ]);
+                        })
+                        .catch((error) => {
+                            Alert.alert("Erreur", error.message);
+                        });
+                } else {
+                    Alert.alert("Erreur", "Aucun utilisateur connecté");
+                }
+            }else{
+
+                if (auth.currentUser) {
+                    if(result.includes("Oui")){
+
+                        set(newContactRef, {
+                            type: "agent",
+                            name,
+        
+                        })
+                            .then(() => {
+                                Alert.alert("Nouvel agent sauvegardé", `Nom: ${name}`, [
+                                    { text: "OK", onPress: () => navigation.navigate('ContactsList') }
+                                ]);
+                            })
+                            .catch((error) => {
+                                Alert.alert("Erreur", error.message);
+                            });
+
+                    }else if(result.includes("Non")) {
+                        Alert.alert("N'exègeres pas non plus !", `${name}, serieusement ?!`);
+                    }else{
+                        Alert.alert("Erreur", "Echec, veuillez reessayer plus tard.");
+                    }
+
+                } else {
+                    Alert.alert("Erreur", "Aucun utilisateur connecté");
+                }
+
+            }
+        });
     };
 
     const changeContact = (side) => {
@@ -99,15 +129,15 @@ const NewContact = ({ navigation }) => {
                     />
                     <Text style={styles.buttonText}>Nouveau contact</Text>
                 </TouchableOpacity>
-
-
             </View>
+
             {activeSide === 'right' && (
                 <>
                     <TextInput
                         style={styles.input}
                         placeholder="Nom"
                         value={name}
+                        maxLength={40}
                         onChangeText={setName}
                     />
 
@@ -115,6 +145,7 @@ const NewContact = ({ navigation }) => {
                         style={styles.input}
                         placeholder="Prenom"
                         value={firstname}
+                        maxLength={40}
                         onChangeText={setFirstname}
                     />
 
@@ -122,6 +153,7 @@ const NewContact = ({ navigation }) => {
                         style={styles.input}
                         placeholder="Email"
                         value={email}
+                        maxLength={40}
                         onChangeText={setEmail}
                     />
                 </>
@@ -130,14 +162,15 @@ const NewContact = ({ navigation }) => {
                <>
                     <TextInput
                         style={styles.input}
-                        placeholder="A qui voulez-vous parler ?"
+                        placeholder="Naruto, Melanchon, Pharaon, un bouchon de bouteille..."
                         value={name}
+                        maxLength={40}
                         onChangeText={setName}
                     />
-
-
+                    {isLoading && (
+                    <Image source={require('../../../assets/gifs/loading.gif')} />
+                )}
                </>
-
             )}
 
             <TouchableOpacity style={styles.editButton} onPress={handleSaveContact}>

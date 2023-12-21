@@ -1,154 +1,136 @@
-import React, { useState, useEffect, isLoading, ActivityIndicator } from 'react';
-import { Image, View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import axios from 'axios';
-
-import { database } from '../../../firebaseConfig';
-import { ref, set, push, update } from 'firebase/database';
-
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
+import { set, ref, push, get, update } from 'firebase/database';
 import { auth } from '../../../firebaseConfig';
-import { MaterialIcons } from "@expo/vector-icons";
-
-import { verifName } from '../../../api';
+import { database } from '../../../firebaseConfig';
 
 const NewTalk = ({ navigation }) => {
+    const userId = auth.currentUser.uid;
+    const [contacts, setContacts] = useState([]);
+    const [searchText, setSearchText] = useState('');
 
-    const [name, setName] = useState('');
-    // const [response, setResponse] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    useEffect(() => {
+        const contactsRef = ref(database, `users/${userId}/contacts`);
+        get(contactsRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                const contactsArray = Object.entries(snapshot.val()).map(([key, value]) => ({
+                    id: key,
+                    ...value,
+                }));
+                setContacts(contactsArray);
+            } else {
+                setContacts([]);
+            }
+        }).catch(error => {
+            Alert.alert('Erreur de chargement', error.message);
+        });
+    }, [userId]);
 
-    const callApi = async (name) => {
-        // Active le gif
-        setIsLoading(true);
-        const fullMessage = "Tu dois me répondre uniquement par 'Oui' ou par 'Non': Parmi ces propositions ['Personnage réel','Personnage fictif','Objet','Lieu' ], est ce que le mot '"+name+"' peut être considéré comme une référence qui fait partie de ces propositions ?";
-        var aiResponse;
-        console.log(fullMessage);
-        try {
-            aiResponse = await verifName(fullMessage);
-            
-        } catch (error) {
-            Alert.alert("Erreur", error.message);
-        } finally {
-            // Désactive le gif
-            setIsLoading(false); 
-            return aiResponse;
-            // setResponse(aiResponse);
-        }
-    };
+    const handleSaveTalk = (contactId, contactName) => {
+        const newTalkRef = push(ref(database, 'talks'));
+        const newTalkUser = ref(database, `users/${userId}/talks`);
+        const updates = {};
+        updates[newTalkRef.key] = true;
 
-    const handleSaveTalk = () => {
-        if (auth.currentUser) {
-            const userId = auth.currentUser.uid;
-            const newTalkRef = push(ref(database, `talks`));
-            const newTalkUser = ref(database, `users/${userId}/talks`);
-            const updates = {};
-            updates[newTalkRef.key] = true;
-            callApi(name).then(result => {
-                console.log(result);
-                if(result.includes("Oui")){
-                    
-                    set(newTalkRef, {
-                        participants: [userId, name],
-                        lastMessage: "",
-                        lastActivity: Date.now(),
-                         // const timestamp = 1703082786449;
-                        // const date = new Date(timestamp);
-                        // console.log(date.toString());
-    
-                        
-                    })
-                        .then(() => {
-                            Alert.alert("Nouvelle discussion crée:", `Avec ${name}`, [
-                                { text: "Nice ", onPress: () => navigation.navigate('talk', { talk: newTalkRef.key }) }
-                            ]);
-                        })
-                        .catch((error) => {
-                            Alert.alert("Erreur", error.message);
-                        });
-
-                    update(newTalkUser, updates)
-                        .then(() => {
-                        
-                        })
-                        .catch((error) => {
-                            Alert.alert("Erreur", error.message);
-                        });
-                }else if(result.includes("Non")) {
-                    Alert.alert("N'exègeres pas non plus !", `${name}, serieusement ?!`);
-                }else{
-                    Alert.alert("Erreur", "Echec, veuillez reessayer plus tard.");
-                }
+        //On enregistre dans la branch discussion une nouvelle discu
+        set(newTalkRef, {
+            participants: { [userId]: true, [contactId]: true },
+            lastMessage: '',
+            lastActivity: Date.now(),
+        })
+            .then(() => {
+                Alert.alert('Nouvelle discussion créée', `Avec ${contactName}`);
+                navigation.navigate('Talk', { talkId: newTalkRef.key });
+            })
+            .catch((error) => {
+                Alert.alert('Erreur', error.message);
             });
 
-        } else{
-            Alert.alert("Erreur", "Aucun utilisateur connecté");
-        }
+        //On met à jour la lists des discu du user
+        update(newTalkUser, updates)
+            .then(() => {
 
-    }
+            })
+            .catch((error) => {
+                Alert.alert("Erreur", error.message);
+            });
+    };
+
+    const renderItem = ({ item }) => (
+        <View style={styles.itemContainer}>
+            <View style={styles.contactInfo}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.type}>{item.type}</Text>
+            </View>
+            <TouchableOpacity
+                style={styles.talkButton}
+                onPress={() => handleSaveTalk(item.id, item.name)}
+            >
+                <Text style={styles.talkButtonText}>Créer une discussion</Text>
+            </TouchableOpacity>
+        </View>
+    );
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <MaterialIcons name="arrow-back" size={32} color="black" />
-            </TouchableOpacity>
-            <Text style={styles.header}>Nouvelle discussion</Text>
-            <View style={styles.form}>
-                <TextInput
-                    placeholder="Naruto, Melanchon, Pharaon, bouchon de bouteille..."
-                    value={name}
-                    onChangeText={setName}
-                    style={styles.textInput}
-                    maxLength={40}
-                />
-                {isLoading && (
-                    <Image source={require('../../../assets/gifs/loading.gif')} />
+            <TextInput
+                style={styles.searchBar}
+                value={searchText}
+                onChangeText={setSearchText}
+                placeholder="Recherche par nom..."
+            />
+            <FlatList
+                data={contacts.filter(contact =>
+                    contact.name.toLowerCase().includes(searchText.toLowerCase())
                 )}
-                <TouchableOpacity style={styles.button} onPress={handleSaveTalk}>
-                    <Text style={styles.buttonText}>Créer</Text>
-                </TouchableOpacity>
-
-            </View>
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+            />
         </View>
     );
 };
 
-const styles = StyleSheet.create({  
-
+const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        padding: 20,
     },
-    header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    form: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    textInput: {
+    searchBar: {
+        height: 40,
         borderWidth: 1,
-        borderColor: '#ddd',
+        paddingLeft: 20,
+        margin: 10,
+        borderColor: '#009688',
+        backgroundColor: 'white',
+    },
+    itemContainer: {
+        flexDirection: 'row',
         padding: 10,
-        fontSize: 15,
-        borderRadius: 6,
-        marginBottom: 20,
+        borderBottomWidth: 1,
+        borderColor: '#ccc',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
-    button: {
-        backgroundColor: '#0066cc',
-        padding: 15,
-        borderRadius: 6,
+    contactInfo: {
+        flex: 1,
     },
-    buttonText: {
-        color: '#fff',
+    name: {
         fontSize: 18,
-        textAlign: 'center',
     },
-    backButton: {
-        marginBottom: 20,
+    type: {
+        fontSize: 14,
+        color: 'grey',
     },
-
-})
+    talkButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        backgroundColor: '#4CAF50',
+        borderRadius: 20,
+    },
+    talkButtonText: {
+        color: 'white',
+        fontSize: 14,
+    },
+});
 
 export default NewTalk;

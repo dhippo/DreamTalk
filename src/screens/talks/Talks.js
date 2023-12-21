@@ -18,15 +18,14 @@ const Talks = ({ navigation }) => {
                     const data = snapshot.val();
                     if (data) {
                         // Création d'une promesse pour chaque 'talk' pour gérer les requêtes asynchrones
-                        const talksPromises = Object.keys(data).map((key) => {
+                        const talksPromises = Object.keys(data).map(async (key) => {
                             const talkRef = ref(database, `talks/${key}`);
-                            return get(talkRef).then((talkSnapshot) => {
-                                if (talkSnapshot.exists()) {
-                                    // Retourne l'objet 'talk' avec les données fusionnées
-                                    return { id: key, ...talkSnapshot.val() };
-                                }
-                                return null;
-                            });
+                            const talkSnapshot = await get(talkRef);
+                            if (talkSnapshot.exists()) {
+                                // Retourne l'objet 'talk' avec les données fusionnées
+                                return { id: key, ...talkSnapshot.val() };
+                            }
+                            return null;
                         });
 
                         // Attendre que toutes les promesses soient résolues
