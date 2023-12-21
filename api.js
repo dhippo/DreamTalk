@@ -5,6 +5,7 @@ import axios from 'axios';
 
 const openAiApiKey = OPENAI_API_KEY;
 
+
 const openAiApi = axios.create({
     baseURL: 'https://api.openai.com/v1',
     headers: {
@@ -18,8 +19,10 @@ export const chatWithOpenAi = async (message) => {
         const response = await openAiApi.post('/chat/completions', {
             model: "gpt-3.5-turbo",
             messages: [{ role: "user", content: message }],
-            temperature: 0.7
+            temperature: 0.7,
+            max_tokens: 60
         });
+        console.log(response.data.choices[0].message.content);
         return response.data.choices[0].message.content;
     } catch (error) {
         console.error('Erreur lors de la communication avec OpenAI:', error);

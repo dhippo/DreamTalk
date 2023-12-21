@@ -1,43 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, isLoading, ActivityIndicator } from 'react';
 import { Image, View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import axios from 'axios';
 
 import { database } from '../../../firebaseConfig';
-import { ref, set, push } from 'firebase/database';
+import { ref, set, push, update } from 'firebase/database';
 
 import { auth } from '../../../firebaseConfig';
 import { MaterialIcons } from "@expo/vector-icons";
-// import { acceptsLanguage } from 'express/lib/request';
+
+import { chatWithOpenAi } from '../../../api';
 
 const NewTalk = ({ navigation }) => {
 
     const [name, setName] = useState('');
+    // const [response, setResponse] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const callApi = async (nameReq) => {
+        // Active le gif
+        console.log(nameReq);
+        setIsLoading(true);
+        const preprompt = "Est ce que ce mot est un objet, un animal, une personne fictif ou réel ou bien un lieu ? Répond moi par Oui si c'est le cas ou par Non si ce n'est pas le cas: Le mot est:";
+        const fullMessage = preprompt + nameReq;
+        var aiResponse;
+        try {
+            console.log(fullMessage);
+            aiResponse = await chatWithOpenAi(fullMessage);
+        } catch (error) {
+            Alert.alert("Erreur", error.message);
+        } finally {
+            // Désactive le gif
+            setIsLoading(false); 
+            return nameReq;
+            // setResponse(aiResponse);
+        }
+    };
+    // if (isLoading) {
+    //     return <ActivityIndicator />; // Affiche un loader tant que la requête est en cours
+    // }
 
     const handleSaveTalk = () => {
         if (auth.currentUser) {
             const userId = auth.currentUser.uid;
             const newTalkRef = push(ref(database, `talks`));
-            
-            // const timestamp = 1703082786449;
-            // const date = new Date(timestamp);
-            // console.log(date.toString());
+            const newTalkUser = ref(database, `users/${userId}/talks`);
+            const updates = {};
+            updates[newTalkRef.key] = true;
+            // callApi(name).then(result => {
+            //     if( result == "Oui"){
+                    
+                    set(newTalkRef, {
+                        participants: [userId, name],
+                        lastMessage: "",
+                        lastActivity: Date.now(),
+                         // const timestamp = 1703082786449;
+                        // const date = new Date(timestamp);
+                        // console.log(date.toString());
+    
+                        
+                    })
+                        .then(() => {
+                            Alert.alert("Nouvelle discussion crée:", `Avec ${name}`, [
+                                { text: "Nice ", onPress: () => navigation.navigate('talk', { talk: newTalkRef.key }) }
+                            ]);
+                        })
+                        .catch((error) => {
+                            Alert.alert("Erreur", error.message);
+                        });
 
-            set(newTalkRef, {
-                participants: [userId, name], // ID de l'utilisateur actuel et ID de l'autre participant
-                lastMessage: "",
-                lastActivity: Date.now(),
-                
-            })
-                .then(() => {
-                    Alert.alert("Nouvelle discussion crée:", `Avec ${name}`, [
-                        { text: "Nice ", onPress: () => navigation.navigate('talk', { talk: newTalkRef.name }) }
-                    ]);
-                })
-                .catch((error) => {
-                    Alert.alert("Erreur", error.message);
-                });
-            Alert.alert("Nouvelle discussion crée:", `Avec ${name}`);
+                    update(newTalkUser, updates)
+                        .then(() => {
+                        
+                        })
+                        .catch((error) => {
+                            Alert.alert("Erreur", error.message);
+                        });
+                    
+                    console.log(name);
+                    // console.log(result);
+                // }else if(result == "Non") {
+                //     Alert.alert("N'exègeres pas non plus !", `${result}, serieusement ?!`);
+                //     console.log(name);
+                //     console.log(result);
+                // }else{
+                //     Alert.alert("Erreur", "Echec, veuillez reessayer plus tard.");
+                // }
+            // });
 
-        } else {
+        } else{
             Alert.alert("Erreur", "Aucun utilisateur connecté");
         }
 
@@ -51,14 +101,19 @@ const NewTalk = ({ navigation }) => {
             <Text style={styles.header}>Nouvelle discussion</Text>
             <View style={styles.form}>
                 <TextInput
-                    placeholder="Nom du contact"
+                    placeholder="Naruto, Melanchon, Pharaon, bouchon de bouteille..."
                     value={name}
                     onChangeText={setName}
                     style={styles.textInput}
+                    maxLength={40}
                 />
+                {isLoading && (
+                    <Image source={require('../../../assets/gifs/loading.gif')} />
+                )}
                 <TouchableOpacity style={styles.button} onPress={handleSaveTalk}>
                     <Text style={styles.buttonText}>Créer</Text>
                 </TouchableOpacity>
+
             </View>
         </View>
     );
@@ -84,7 +139,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ddd',
         padding: 10,
-        fontSize: 18,
+        fontSize: 15,
         borderRadius: 6,
         marginBottom: 20,
     },
