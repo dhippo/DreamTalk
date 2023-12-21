@@ -8,7 +8,7 @@ import { ref, set, push, update } from 'firebase/database';
 import { auth } from '../../../firebaseConfig';
 import { MaterialIcons } from "@expo/vector-icons";
 
-import { chatWithOpenAi } from '../../../api';
+import { verifName } from '../../../api';
 
 const NewTalk = ({ navigation }) => {
 
@@ -16,28 +16,24 @@ const NewTalk = ({ navigation }) => {
     // const [response, setResponse] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const callApi = async (nameReq) => {
+    const callApi = async (name) => {
         // Active le gif
-        console.log(nameReq);
         setIsLoading(true);
-        const preprompt = "Est ce que ce mot est un objet, un animal, une personne fictif ou réel ou bien un lieu ? Répond moi par Oui si c'est le cas ou par Non si ce n'est pas le cas: Le mot est:";
-        const fullMessage = preprompt + nameReq;
+        const fullMessage = "Tu dois me répondre uniquement par 'Oui' ou par 'Non': Parmi ces propositions ['Personnage réel','Personnage fictif','Objet','Lieu' ], est ce que le mot '"+name+"' peut être considéré comme une référence qui fait partie de ces propositions ?";
         var aiResponse;
+        console.log(fullMessage);
         try {
-            console.log(fullMessage);
-            aiResponse = await chatWithOpenAi(fullMessage);
+            aiResponse = await verifName(fullMessage);
+            
         } catch (error) {
             Alert.alert("Erreur", error.message);
         } finally {
             // Désactive le gif
             setIsLoading(false); 
-            return nameReq;
+            return aiResponse;
             // setResponse(aiResponse);
         }
     };
-    // if (isLoading) {
-    //     return <ActivityIndicator />; // Affiche un loader tant que la requête est en cours
-    // }
 
     const handleSaveTalk = () => {
         if (auth.currentUser) {
@@ -46,8 +42,9 @@ const NewTalk = ({ navigation }) => {
             const newTalkUser = ref(database, `users/${userId}/talks`);
             const updates = {};
             updates[newTalkRef.key] = true;
-            // callApi(name).then(result => {
-            //     if( result == "Oui"){
+            callApi(name).then(result => {
+                console.log(result);
+                if(result.includes("Oui")){
                     
                     set(newTalkRef, {
                         participants: [userId, name],
@@ -75,17 +72,12 @@ const NewTalk = ({ navigation }) => {
                         .catch((error) => {
                             Alert.alert("Erreur", error.message);
                         });
-                    
-                    console.log(name);
-                    // console.log(result);
-                // }else if(result == "Non") {
-                //     Alert.alert("N'exègeres pas non plus !", `${result}, serieusement ?!`);
-                //     console.log(name);
-                //     console.log(result);
-                // }else{
-                //     Alert.alert("Erreur", "Echec, veuillez reessayer plus tard.");
-                // }
-            // });
+                }else if(result.includes("Non")) {
+                    Alert.alert("N'exègeres pas non plus !", `${name}, serieusement ?!`);
+                }else{
+                    Alert.alert("Erreur", "Echec, veuillez reessayer plus tard.");
+                }
+            });
 
         } else{
             Alert.alert("Erreur", "Aucun utilisateur connecté");

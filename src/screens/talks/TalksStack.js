@@ -14,7 +14,7 @@ const TalksStack = () => {
         
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-
+            
             <Stack.Screen name="Talks" component={Talks} />
             <Stack.Screen name="Talk" component={Talk} />
             <Stack.Screen name="NewTalk" component={NewTalk} />
