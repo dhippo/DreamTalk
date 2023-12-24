@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
-import { database } from '../../../firebaseConfig';
+import { database, auth } from '../../../firebaseConfig';
 import { ref, set } from 'firebase/database';
-import { auth } from '../../../firebaseConfig';
 import {MaterialIcons} from "@expo/vector-icons";
 
 const UpdateProfil = ({ route, navigation }) => {
     const { userProfile } = route.params;
     const [name, setName] = useState(userProfile.name);
+    const [username, setUsername] = useState(userProfile.username);
     const [firstname, setFirstname] = useState(userProfile.firstname);
 
     const handleSaveChanges = () => {
@@ -16,9 +16,15 @@ const UpdateProfil = ({ route, navigation }) => {
             // Chemin pour les données de profil
             const profileRef = ref(database, `users/${userId}/profile`);
 
+            if (username === '' ) {
+                alert("Veuillez saisir un username !");
+                return;
+            }
+
             set(profileRef, {
-                name,
-                firstname
+                username: username.trim(),
+                name: name.trim(),
+                firstname: firstname.trim()
             })
                 .then(() => {
                     Alert.alert("Profil mis à jour", "Les informations ont été enregistrées.", [
@@ -38,6 +44,7 @@ const UpdateProfil = ({ route, navigation }) => {
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                 <MaterialIcons name="arrow-back" size={32} color="black" />
             </TouchableOpacity>
+            <TextInput style={styles.input} value={username} onChangeText={setUsername} placeholder="Username" />
             <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nom" />
             <TextInput style={styles.input} value={firstname} onChangeText={setFirstname} placeholder="Prénom" />
             <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>

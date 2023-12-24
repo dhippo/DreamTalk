@@ -26,34 +26,53 @@ const NewTalk = ({ navigation }) => {
         });
     }, [userId]);
 
-    const handleSaveTalk = (contactId, contactName) => {
+    const handleSaveTalk = (contact) => {
         const newTalkRef = push(ref(database, 'talks'));
         const newTalkUser = ref(database, `users/${userId}/talks`);
+        const newContactTalk = ref(database, `users/${contact.id}/talks`);
         const updates = {};
         updates[newTalkRef.key] = true;
+        var username;
+        const profileRef = ref(database, `users/${auth.currentUser.uid}/profile`);
+        get(profileRef).then((snapshot) => {
+            if (snapshot.exists()) {
 
-        //On enregistre dans la branch discussion une nouvelle discu
-        set(newTalkRef, {
-            participants: { [userId]: true, [contactId]: true },
-            lastMessage: '',
-            lastActivity: Date.now(),
+                const userData = snapshot.val();
+                username = userData.username;
+                console.log(username);
+                // On enregistre dans la branch discussion une nouvelle discu
+                set(newTalkRef, {
+                    participants: { [username]: true, [contact.name]: true },
+                    lastMessage: '',
+                    lastActivity: Date.now(),
+                })
+                    .then(() => {
+                        Alert.alert('Nouvelle discussion créée', `Avec ${contact.name}`);
+                        navigation.navigate('Talk', { talkId: newTalkRef.key });
+                    })
+                    .catch((error) => {
+                        Alert.alert('Erreur', error.message);
+                    });
+
+                //On met à jour la lists des discu du user
+                update(newTalkUser, updates)
+                    .then(() => {
+
+                    })
+                    .catch((error) => {
+                        Alert.alert("Erreur", error.message);
+                    });
+
+                update(newContactTalk, updates)
+                    .then(() => {
+
+                    })
+                    .catch((error) => {
+                        Alert.alert("Erreur", error.message);
+                    });
+
+            }
         })
-            .then(() => {
-                Alert.alert('Nouvelle discussion créée', `Avec ${contactName}`);
-                navigation.navigate('Talk', { talkId: newTalkRef.key });
-            })
-            .catch((error) => {
-                Alert.alert('Erreur', error.message);
-            });
-
-        //On met à jour la lists des discu du user
-        update(newTalkUser, updates)
-            .then(() => {
-
-            })
-            .catch((error) => {
-                Alert.alert("Erreur", error.message);
-            });
     };
 
     const renderItem = ({ item }) => (
@@ -64,7 +83,7 @@ const NewTalk = ({ navigation }) => {
             </View>
             <TouchableOpacity
                 style={styles.talkButton}
-                onPress={() => handleSaveTalk(item.id, item.name)}
+                onPress={() => handleSaveTalk(item)}
             >
                 <Text style={styles.talkButtonText}>Créer une discussion</Text>
             </TouchableOpacity>

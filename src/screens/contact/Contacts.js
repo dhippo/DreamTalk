@@ -54,8 +54,8 @@ const Contacts = ({ navigation }) => {
                         style={styles.contactItem}
                         onPress={() => navigation.navigate('ContactInfos', { contact: item })}
                     >
-                        <Text style={styles.contactName}>{item.firstname} {item.name}</Text>
-                        <Text style={styles.contactEmail}>{item.email}</Text>
+                        <Text style={styles.contactName}>{item.name}</Text>
+                        <Text style={styles.contactType}>Type: {item.type}</Text>
                     </TouchableOpacity>
                 )}
                 keyExtractor={item => item.id}
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
     },
-    contactEmail: {
+    contactType: {
         fontSize: 16,
         color: 'gray',
     },

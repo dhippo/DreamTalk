@@ -8,6 +8,7 @@ import { database } from '../../../firebaseConfig';
 
 const InfoProfil = ({ navigation }) => {
     const [userProfile, setUserProfile] = useState({
+        username: '',
         name: '',
         email: auth.currentUser.email,
         firstname: ''
@@ -28,6 +29,7 @@ const InfoProfil = ({ navigation }) => {
                     setUserProfile({
                         name: data.name || '',
                         firstname: data.firstname || '',
+                        username: data.username || '',
                         email: userEmail  // Utilisation de l'email récupéré
                     });
                 }
@@ -53,6 +55,7 @@ const InfoProfil = ({ navigation }) => {
         <View style={styles.container}>
             <Text style={styles.header}>Profil</Text>
             <View style={styles.infoContainer}>
+                <Text style={styles.info}>Username : {userProfile.username}</Text>
                 <Text style={styles.info}>Nom : {userProfile.name}</Text>
                 <Text style={styles.info}>Prénom : {userProfile.firstname}</Text>
                 <Text style={styles.info}>Email : {userProfile.email}</Text>

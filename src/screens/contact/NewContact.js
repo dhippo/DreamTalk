@@ -3,7 +3,7 @@ import React, { useState, isLoading } from 'react';
 import { Image, View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 
 import { database } from '../../../firebaseConfig';
-import { ref, set, push } from 'firebase/database';
+import { get, ref, set, push, query, orderByChild, equalTo } from 'firebase/database';
 
 import { auth } from '../../../firebaseConfig';
 import { MaterialIcons } from "@expo/vector-icons";
@@ -14,69 +14,96 @@ const NewContact = ({ navigation }) => {
     const userId = auth.currentUser.uid;
     const [isLoading, setIsLoading] = useState(false);
     const [activeSide, setActiveSide] = useState('right');
-
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [firstname, setFirstname] = useState('');
+    const [username, setUserName] = useState('');
+    var usernameOK = username.trim()
 
     const newContactRef = push(ref(database, `users/${userId}/contacts`));
-    
+
+    const usersRef = ref(database, 'users');
+    const matchingUserQuery = query(usersRef, orderByChild('profile/username'), equalTo(usernameOK));
+
+
     var contact;
     if (activeSide === 'left') {
         contact = "agent";
-    }   else {
+    } else {
         contact = "user";
     }
 
     const callApi = async (name) => {
         // Active le gif
         setIsLoading(true);
-        const fullMessage = "Tu dois me répondre uniquement par 'Oui' ou par 'Non': Parmi ces propositions ['Personnage réel','Personnage fictif','Objet','Lieu' ], est ce que le mot '"+name+"' peut être considéré comme une référence qui fait partie de ces propositions ?";
+        const fullMessage = "Tu dois me répondre uniquement par 'Oui' ou par 'Non': Parmi ces propositions ['Personnage réel','Personnage fictif','Objet','Lieu' ], est ce que le mot '" + name + "' peut être considéré comme une référence qui fait partie de ces propositions ?";
         var aiResponse;
         console.log(fullMessage);
         try {
             aiResponse = await verifName(fullMessage);
-            
+
         } catch (error) {
             Alert.alert("Erreur", error.message);
         } finally {
             // Désactive le gif
-            setIsLoading(false); 
+            setIsLoading(false);
             return aiResponse;
             // setResponse(aiResponse);
         }
     };
 
     const handleSaveContact = () => {
-        callApi(name).then(result => {
+        if (auth.currentUser) {
             if (contact === "user") {
-                if (auth.currentUser) {
-                    set(newContactRef, {
-                        type: "user",
-                        name,
-                        firstname,
-                        email
-                    })
-                        .then(() => {
-                            Alert.alert("Contact Sauvegardé", `Nom: ${name}\nEmail: ${email}`, [
-                                { text: "OK", onPress: () => navigation.navigate('ContactsList') }
-                            ]);
-                        })
-                        .catch((error) => {
-                            Alert.alert("Erreur", error.message);
-                        });
-                } else {
-                    Alert.alert("Erreur", "Aucun utilisateur connecté");
-                }
-            }else{
+                const profileRef = ref(database, `users/${auth.currentUser.uid}/profile`);
 
-                if (auth.currentUser) {
-                    if(result.includes("Oui")){
+                get(profileRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        // recuperer le username
+                        if (userData.username !== usernameOK) {
+                            // on recupe les data du contact qu'il cherche
+                            get(matchingUserQuery).then((snapshot) => {
+                                if (snapshot.exists()) {
+                                    const users = snapshot.val();
+                                    const userIdContact = Object.keys(users)[0]; // Cela vous donne l'ID de l'utilisateur
+                                    console.log(userIdContact);
+                                    
+                                    
+                                    set(newContactRef, {
+                                        id: userIdContact,
+                                        type: "user",
+                                        name: usernameOK,
+                                    })
+                                        .then(() => {
+                                            Alert.alert("Contact Sauvegardé", `Nom: ${usernameOK}`, [
+                                                { text: "OK", onPress: () => navigation.navigate('ContactsList') }
+                                            ]);
+                                        })
+                                        .catch((error) => {
+                                            Alert.alert("Erreur", error.message);
+                                        });
+
+
+                                } else {
+                                    Alert.alert("Erreur", "Aucun utilisateur trouvé !");
+                                }
+                            }).catch((error) => {
+                                Alert.alert("Erreur", error.message);
+                            });
+                        } else {
+                            Alert.alert("Erreur", "Vous ne pouvez pas vous ajouter vous même lol");
+                        }
+                    }
+                })
+                    .catch((error) => {
+                        console.error("Erreur de lecture du profil :", error);
+                    });
+            } else {
+                callApi(name).then(result => {
+                    if (result.includes("Oui")) {
 
                         set(newContactRef, {
                             type: "agent",
                             name,
-        
                         })
                             .then(() => {
                                 Alert.alert("Nouvel agent sauvegardé", `Nom: ${name}`, [
@@ -86,23 +113,21 @@ const NewContact = ({ navigation }) => {
                             .catch((error) => {
                                 Alert.alert("Erreur", error.message);
                             });
-
-                    }else if(result.includes("Non")) {
+                    } else if (result.includes("Non")) {
                         Alert.alert("N'exègeres pas non plus !", `${name}, serieusement ?!`);
-                    }else{
+                    } else {
                         Alert.alert("Erreur", "Echec, veuillez reessayer plus tard.");
                     }
-
-                } else {
-                    Alert.alert("Erreur", "Aucun utilisateur connecté");
-                }
-
+                })
             }
-        });
+        } else {
+            Alert.alert("Erreur", "Aucun utilisateur connecté");
+        }
     };
 
+
     const changeContact = (side) => {
-        setActiveSide(side); 
+        setActiveSide(side);
     };
 
 
@@ -114,8 +139,8 @@ const NewContact = ({ navigation }) => {
             <Text style={styles.title}>Nouveau Contact</Text>
 
             <View style={styles.buttonContainer}>
-    
-            <View style={[styles.ActiveBtn, activeSide === 'right' ? { left: '50%' } : { right: '50%' }]} />                
+
+                <View style={[styles.ActiveBtn, activeSide === 'right' ? { left: '50%' } : { right: '50%' }]} />
                 <TouchableOpacity style={styles.btnAgent} onPress={() => changeContact('left')}>
                     <Image style={styles.btnImage}
                         source={require('../../../assets/icons/bot.png')}
@@ -135,31 +160,15 @@ const NewContact = ({ navigation }) => {
                 <>
                     <TextInput
                         style={styles.input}
-                        placeholder="Nom"
-                        value={name}
+                        placeholder="Nom d'un utilisateur"
+                        value={username}
                         maxLength={40}
-                        onChangeText={setName}
-                    />
-
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Prenom"
-                        value={firstname}
-                        maxLength={40}
-                        onChangeText={setFirstname}
-                    />
-
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Email"
-                        value={email}
-                        maxLength={40}
-                        onChangeText={setEmail}
+                        onChangeText={setUserName}
                     />
                 </>
             )}
             {activeSide === 'left' && (
-               <>
+                <>
                     <TextInput
                         style={styles.input}
                         placeholder="Naruto, Melanchon, Pharaon, un bouchon de bouteille..."
@@ -168,9 +177,9 @@ const NewContact = ({ navigation }) => {
                         onChangeText={setName}
                     />
                     {isLoading && (
-                    <Image source={require('../../../assets/gifs/loading.gif')} />
-                )}
-               </>
+                        <Image source={require('../../../assets/gifs/loading.gif')} />
+                    )}
+                </>
             )}
 
             <TouchableOpacity style={styles.editButton} onPress={handleSaveContact}>
@@ -247,8 +256,8 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         margin: 4,
-        width: '50%', 
-        backgroundColor: 'red', 
+        width: '50%',
+        backgroundColor: 'red',
         borderRadius: 10,
     },
     btnAgent: {

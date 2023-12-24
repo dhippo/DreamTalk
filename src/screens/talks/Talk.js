@@ -8,7 +8,8 @@ const Talk = ({ route, navigation }) => {
     const { talkId } = route.params;
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
-
+    console.log('talkId:', talkId);
+    console.log('messages:', messages);
     useEffect(() => {
         // Récupération initiale des messages
         const fetchMessages = async () => {
@@ -40,6 +41,7 @@ const Talk = ({ route, navigation }) => {
                 });
                 updatedMessages.sort((a, b) => b.timestamp - a.timestamp);
                 setMessages(updatedMessages);
+                
             } else {
                 setMessages([]);
             }
@@ -52,6 +54,7 @@ const Talk = ({ route, navigation }) => {
     const handleSendMessage = async () => {
         if (inputText.trim()) {
             const newMessageRef = push(ref(getDatabase(), `talks/${talkId}/messages`));
+            const lastMsgRef = ref(getDatabase(), `talks/${talkId}/lastMessage`);
             try {
                 // Enregistrez le nouveau message dans Firebase
                 await set(newMessageRef, {
@@ -59,6 +62,11 @@ const Talk = ({ route, navigation }) => {
                     text: inputText,
                     timestamp: Date.now(),
                 });
+                // Mettre à jour le dernier message de la discussion
+                await set(lastMsgRef, inputText);
+                // Effacer le champ de saisie
+                setInputText('');
+
 
             } catch (error) {
                 console.error('Erreur lors de l\'envoi du message:', error);
@@ -69,14 +77,21 @@ const Talk = ({ route, navigation }) => {
 
     const renderMessageItem = ({ item }) => {
         // Affichez les informations de l'élément dans la console
-        console.log('renderMessageItem item:', item.text);
-
-        return (
-            <View style={styles.messageItem}>
-                <Text style={styles.messageText}>{item.text}</Text>
-                {/* Vous pouvez ajouter plus de logique ici si nécessaire */}
-            </View>
-        );
+        if (item.senderId === userId) {
+            return (
+                <View style={styles.messageSendItem}>
+                    <Text style={styles.messageSend}>{item.text}</Text>
+                    {/* Vous pouvez ajouter plus de logique ici si nécessaire */}
+                </View>
+            );
+         }else{
+            return (
+            <View style={styles.messageReceiveItem}>
+                    <Text style={styles.messageReceive}>{item.text}</Text>
+                    {/* Vous pouvez ajouter plus de logique ici si nécessaire */}
+                </View>
+            );
+         }
     };
     // messages.forEach(element => {
     //     console.log('messages:', element.text);
@@ -118,34 +133,57 @@ const styles = StyleSheet.create({
     },
     messagesList: {
         flex: 1, // La FlatList doit prendre tout l'espace disponible
+        backgroundColor: '#dae0e5', // ou toute autre couleur de fond
     },
-    messageItem: {
+    messageSendItem: {
         padding: 10,
-        marginVertical: 5,
-        backgroundColor: 'lightgrey', // Une couleur de fond pour que les messages soient visibles
+        marginVertical: 2,
+        marginEnd: 5,
+        alignSelf: 'flex-end',
+        backgroundColor: '#0f815c', // Une couleur de fond pour que les messages soient visibles
+        flexDirection: 'row', // 
+        maxWidth: '70%',
+        borderRadius: 5,
+        // #f9fafb
+    },
+    messageSend: {
+        fontSize: 16, // Assurez-vous que la taille de la police est suffisante pour être lue
+        color: 'white', // Assurez-vous que la couleur du texte contraste avec l'arrière-plan
+    },
+    messageReceiveItem: {
+        padding: 10,
+        marginVertical: 2,
+        marginStart: 5,
+        alignSelf: 'flex-start',
+        backgroundColor: 'blue', // Une couleur de fond pour que les messages soient visibles
+        flexDirection: 'row', // 
+        maxWidth: '70%',
         borderRadius: 5,
     },
-    messageText: {
+    messageReceive: {
         fontSize: 16, // Assurez-vous que la taille de la police est suffisante pour être lue
-        color: 'black', // Assurez-vous que la couleur du texte contraste avec l'arrière-plan
+        color: 'white',
     },
     inputContainer: {
         flexDirection: 'row',
         padding: 10,
         backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderColor: '#ddd',
     },
     input: {
         flex: 1,
-        marginRight: 10,
-        borderWidth: 1,
-        borderColor: 'grey',
-        borderRadius: 5,
         padding: 10,
+        marginRight: 10,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 20,
     },
     sendButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
         padding: 10,
-        backgroundColor: 'blue',
-        borderRadius: 5,
+        backgroundColor: '#0a5e43',
+        borderRadius: 20,
     },
     sendButtonText: {
         color: 'white',
