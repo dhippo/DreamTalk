@@ -34,7 +34,7 @@ const NewContact = ({ navigation }) => {
     const callApi = async (name) => {
         // Active le gif
         setIsLoading(true);
-        const fullMessage = "Tu dois me répondre uniquement par 'Oui' ou par 'Non': Parmi ces propositions ['Personnage réel','Personnage fictif','Objet','Lieu' ], est ce que le mot '" + name + "' peut être considéré comme une référence qui fait partie de ces propositions ?";
+        const fullMessage = "Tu dois me répondre uniquement par 'Oui' ou par 'Non': Parmi ces propositions ['Personnage réel','Personnage fictif', 'Nom d'utilisateur', 'Personne réelle', 'Objet', 'Lieu' ], est ce que '"+name+"' peut être considéré ou peut faire parti comme une référence qui fait partie de ces propositions ?";
         var aiResponse;
         console.log(fullMessage);
         try {

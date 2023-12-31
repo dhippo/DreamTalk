@@ -46,9 +46,10 @@ const NewTalk = ({ navigation }) => {
                     lastMessage: '',
                     lastActivity: Date.now(),
                 })
+                // faire la verif que la discu n'existe pas 
                     .then(() => {
                         Alert.alert('Nouvelle discussion créée', `Avec ${contact.name}`);
-                        navigation.navigate('Talk', { talkId: newTalkRef.key });
+                        navigation.navigate('Talk', { talkId: newTalkRef.key, userReicever: contact.name});
                     })
                     .catch((error) => {
                         Alert.alert('Erreur', error.message);

@@ -7,30 +7,45 @@ import { auth } from '../../../firebaseConfig';
 
 const Talks = ({ navigation }) => {
     const [talks, setTalks] = useState([]);
-
+    const [username, setUserName] = useState([]);
+    
     useEffect(() => {
         const fetchTalks = async () => {
             if (auth.currentUser) {
                 const userId = auth.currentUser.uid;
                 const userTalksRef = ref(database, `users/${userId}/talks`);
+               
+                // On recupere le suername du user connecté
+                const userName = await get(ref(database, `users/${userId}/profile/username`));
+                setUserName(userName)
 
                 onValue(userTalksRef, (snapshot) => {
+
                     const data = snapshot.val();
                     if (data) {
-                        // Création d'une promesse pour chaque 'talk' pour gérer les requêtes asynchrones
                         const talksPromises = Object.keys(data).map(async (key) => {
-                            const talkRef = ref(database, `talks/${key}`);
-                            const talkSnapshot = await get(talkRef);
-                            if (talkSnapshot.exists()) {
-                                // Retourne l'objet 'talk' avec les données fusionnées
-                                return { id: key, ...talkSnapshot.val() };
-                            }
-                            return null;
-                        });
+                            // Références séparées pour participants et lastMessage
+                            const participantsRef = ref(database, `talks/${key}/participants`);
+                            const lastMessageRef = ref(database, `talks/${key}/lastMessage`);
+                            
+                            // Récupération des données séparément
+                            const participantsSnapshot = await get(participantsRef);
+                            const lastMessageSnapshot = await get(lastMessageRef);
 
-                        // Attendre que toutes les promesses soient résolues
+                            var userReicever = "";
+                            const userParticipant = participantsSnapshot.exists() ? participantsSnapshot.val() : {};
+                            // On recuper le usernam a qui il parle
+                            userReicever = (username === Object.keys(userParticipant)[0]) ? Object.keys(userParticipant)[1] : Object.keys(userParticipant)[0];
+
+
+                            return {
+                                id: key,
+                                userReicever: userReicever,
+                                lastMessage: lastMessageSnapshot.exists() ? lastMessageSnapshot.val() : ""
+                            };
+                        });
+                
                         Promise.all(talksPromises).then((talks) => {
-                            // Filtrer les valeurs null et mettre à jour l'état avec les 'talks' récupérés
                             setTalks(talks.filter(Boolean));
                         });
                     } else {
@@ -46,13 +61,12 @@ const Talks = ({ navigation }) => {
     const handleAddTalk = () => {
         navigation.navigate('NewTalk');
     };
-
     const renderEmptyList = () => (
         <View style={styles.emptyList}>
             <Text style={styles.emptyText}>Aucun contact disponible.</Text>
         </View>
     );
-
+        
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Liste des discussions</Text>
@@ -60,15 +74,14 @@ const Talks = ({ navigation }) => {
             <FlatList
                 data={talks}
                 renderItem={({ item }) => (
-
                     <TouchableOpacity
                         style={styles.talkItem}
-                        onPress={() => navigation.navigate('Talk', { talkId: item.id })}
+                        onPress={() => navigation.navigate('Talk', { talkId: item.id, userReicever: item.userReicever })}
                     >
                         <Image style={styles.talkImage} source={require('../../../assets/icons/welcome.png')} />
 
-                        <Text style={styles.talkName}>{item.participants[1]}</Text>
-                        <Text style={styles.lastMsg}>Nouvelle discussion</Text>
+                        <Text style={styles.talkName}>{item.userReicever}</Text>
+                        <Text style={styles.lastMsg}>{item.lastMessage}</Text>
                         {/* <Text style={styles.talkName}>{item.lastMessage}</Text> */}
                         {/* Affichez ici d'autres informations pertinentes concernant le 'talk' */}
                     </TouchableOpacity>
@@ -133,7 +146,8 @@ const styles = StyleSheet.create({
         color: '#666',
         fontSize: 12,
         backgroundColor: 'orange',
-        width: 270,
+        maxWidth: 270,
+        maxHeight: 40,
         marginStart: 70,
     },
     emptyList: {

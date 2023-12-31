@@ -11,15 +11,20 @@ const openAiApi = axios.create({
     }
 });
 
-export const chatWithOpenAi = async (message) => {
+export const chatWithOpenAi = async (messages) => {
     try {
         const response = await openAiApi.post('/chat/completions', {
             model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: message }],
-            temperature: 0.1
+            messages: messages,
+            // messages: [{ role: "user", content: message }],
+            temperature: 0.5,
+            max_tokens: 360
         });
-        
-        return response.data.choices[0].message.content;
+        // afficher le nombre de token de la reponse dans les logs
+        // console.log(response.data.choices[0].logprobs.token_logprobs.length);
+        let reponse = response.data.choices[0].message.content;
+        messages.push({ role: "assistant", content: reponse.trim() });
+        return Promise.resolve({success: true, response: reponse.trim()});
     } catch (error) {
         console.error('Erreur lors de la communication avec OpenAI:', error);
         return '';
@@ -31,10 +36,11 @@ export const verifName = async (message) => {
         const response = await openAiApi.post('/chat/completions', {
             model: "gpt-3.5-turbo",
             messages: [{ role: "user", content: message }],
-            temperature: 0.5,
-            max_tokens: 100
+            temperature: 0.8,
+            max_tokens: 60
         });
         
+        console.log(response.data.choices[0].message.content);
         return response.data.choices[0].message.content;
     } catch (error) {
         console.error('Erreur lors de la communication avec OpenAI:', error);

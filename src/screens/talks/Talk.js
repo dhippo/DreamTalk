@@ -1,72 +1,123 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
-import { getDatabase, set, ref, push, get, onValue } from 'firebase/database'; // Importez les fonctions nécessaires
+import { set, ref, push, get, onValue } from 'firebase/database'; // Importez les fonctions nécessaires
 import { auth } from '../../../firebaseConfig';
-
+import { database } from '../../../firebaseConfig';
+import { chatWithOpenAi } from '../../../api';
 const Talk = ({ route, navigation }) => {
     const userId = auth.currentUser.uid;
-    const { talkId } = route.params;
+    const { talkId, userReicever } = route.params;
+    const [typeContact, setTypeContact] = useState('');
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
-    console.log('talkId:', talkId);
-    console.log('messages:', messages);
-    useEffect(() => {
-        // Récupération initiale des messages
-        const fetchMessages = async () => {
-            const snapshot = await get(ref(getDatabase(), `talks/${talkId}/messages`));
-            if (snapshot.exists()) {
-                const loadedMessages = [];
-                // On va parcourir tout ce quon à recu
-                snapshot.forEach((childSnapshot) => {
-                    const messageData = childSnapshot.val();
-                    loadedMessages.push(messageData);
-                });
+    const [lastMsgsApi, setlastMsgsApi] = useState([]);
 
-                // Tri par timestamp décroissant
-                loadedMessages.sort((a, b) => b.timestamp - a.timestamp);
-                setMessages(loadedMessages);
+    // Retrieve the type of userReicever from `users/${userId}/contacts/key/`
+    const contactsRef = ref(database, `users/${userId}/contacts`);
+
+    // To find out if the user is an agent or not
+    useEffect(() => {
+        get(contactsRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                const contacts = Object.values(snapshot.val());
+                const contact = contacts.find((c) => c.name === userReicever);
+                setTypeContact(contact ? contact.type : 'Type non trouvé');
             } else {
-                setMessages([]);
+                console.log("Aucun contact trouvé.");
+            }
+        }).catch(console.error);
+    }, [userId, userReicever]); // Only re-run the effect if userId or userReicever changes
+
+    //  Lorsque le composant est actif
+    useEffect(() => {
+        const processSnapshot = (snapshot) => {
+            const messages = [];
+            snapshot.forEach((childSnapshot) => {
+                messages.push(childSnapshot.val());
+            });
+            return messages.sort((a, b) => b.timestamp - a.timestamp);
+        };
+
+        // On recupere tous les msg de la discu
+        const fetchInitialMessages = async () => {
+            const snapshot = await get(ref(database, `talks/${talkId}/messages`));
+            if (snapshot.exists()) {
+                const initialMessages = processSnapshot(snapshot);
+                // on initie les msgs dans "messages"
+                setMessages(initialMessages);
+                // on initie les msgs dans "lastMsgsApi" pour le futur envoie à l'api
+                setlastMsgsApi(initialMessages.map(msg => ({
+                    role: msg.senderId === userId ? "user" : "assistant",
+                    content: msg.text
+                })));
             }
         };
 
-        fetchMessages();
+        fetchInitialMessages();
 
-        const unsubscribe = onValue(ref(getDatabase(), `talks/${talkId}/messages`), (snapshot) => {
+        // Mettre à jour les messages lorsque la base de données change
+        const unsubscribe = onValue(ref(database, `talks/${talkId}/messages`), (snapshot) => {
             if (snapshot.exists()) {
-                const updatedMessages = [];
-                snapshot.forEach((childSnapshot) => {
-                    const messageData = childSnapshot.val();
-                    updatedMessages.push(messageData);
-                });
-                updatedMessages.sort((a, b) => b.timestamp - a.timestamp);
-                setMessages(updatedMessages);
-                
-            } else {
-                setMessages([]);
+                setMessages(processSnapshot(snapshot));
             }
         });
 
-        // Fonction de nettoyage pour désabonner lors du démontage du composant
-        return () => unsubscribe();
-    }, [talkId]);
+        return () => unsubscribe(); // Cleanup function to unsubscribe on component unmount
+    }, [talkId]); // Only re-run the effect if talkId changes
 
     const handleSendMessage = async () => {
-        if (inputText.trim()) {
-            const newMessageRef = push(ref(getDatabase(), `talks/${talkId}/messages`));
-            const lastMsgRef = ref(getDatabase(), `talks/${talkId}/lastMessage`);
+        const text = inputText.trim();
+        if (text.length > 0) {
+            const newMessageRef = push(ref(database, `talks/${talkId}/messages`));
+            const lastMsgRef = ref(database, `talks/${talkId}/lastMessage`);
+            
             try {
-                // Enregistrez le nouveau message dans Firebase
                 await set(newMessageRef, {
                     senderId: userId,
-                    text: inputText,
+                    text: text,
                     timestamp: Date.now(),
                 });
-                // Mettre à jour le dernier message de la discussion
-                await set(lastMsgRef, inputText);
-                // Effacer le champ de saisie
+                await set(lastMsgRef, text);
                 setInputText('');
 
+                // Si on parle à un agent
+                if (typeContact === "agent") {
+                    console.log("Msg envoyé à un agent");
+                    const newMsgs = [...lastMsgsApi, {
+                        role: "system",
+                        content: `Je suis un utilisateur qui veux parler à ${userReicever}, je veux donc que tu incarnes ${userReicever} en integrant toute sa personnalité, sa vie, toutes ses connaissances et tout son savoir. Tu dois avoir ses traits de caractère, son vocabulaire et son style. Tu dois t’exprimer exactement comme si je m’adressais à ${userReicever} en utilisant son vocabulaire. Tes réponses doivent être cohérentes avec la personnalité de ${userReicever}. Tu dois absolument retenir toute notre conversation. Tes reponses ne doivent pas depasser 100 caractertes à par si tu as vriaiment besoin de plus pour répondre à une question qui te demande de developper.`
+                    }, {
+                        role: "user",
+                        content: text
+                    }];
+                    const response = await chatWithOpenAi(newMsgs);
+                    if (response.success) {
+                        console.log("Reponse de l'api success");
+
+                        const newMsgs = [...lastMsgsApi, {
+                            role: "assistant",
+                            content: response.response
+                        }];
+                        // enregistrer le msg dans la base de donnée
+                        const newMessageRef = push(ref(database, `talks/${talkId}/messages`));
+                        const lastMsgRef = ref(database, `talks/${talkId}/lastMessage`);
+                        await set(newMessageRef, {
+                            senderId: "assistant",
+                            text: response.response,
+                            timestamp: Date.now(),
+                        });
+                        await set(lastMsgRef, response.response);
+
+                        // setlastMsgsApi(newMsgs);
+                        // console.log(newMsgs);
+                    } else {
+                        console.log("Erreur lors de la communication avec OpenAI");
+                    }
+                    
+                    setlastMsgsApi(newMsgs);
+                    // console.log(newMsgs);
+
+                }
 
             } catch (error) {
                 console.error('Erreur lors de l\'envoi du message:', error);
@@ -76,6 +127,7 @@ const Talk = ({ route, navigation }) => {
     };
 
     const renderMessageItem = ({ item }) => {
+
         // Affichez les informations de l'élément dans la console
         if (item.senderId === userId) {
             return (
@@ -84,18 +136,16 @@ const Talk = ({ route, navigation }) => {
                     {/* Vous pouvez ajouter plus de logique ici si nécessaire */}
                 </View>
             );
-         }else{
+        } else {
             return (
-            <View style={styles.messageReceiveItem}>
+                <View style={styles.messageReceiveItem}>
                     <Text style={styles.messageReceive}>{item.text}</Text>
                     {/* Vous pouvez ajouter plus de logique ici si nécessaire */}
                 </View>
             );
-         }
+        }
     };
-    // messages.forEach(element => {
-    //     console.log('messages:', element.text);
-    // });
+
     return (
 
         <KeyboardAvoidingView
