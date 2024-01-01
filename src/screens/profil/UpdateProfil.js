@@ -1,5 +1,6 @@
+// /Users/macbook/bachelor3/app-hybride/DreamTalk/src/screens/profil/UpdateProfil.js
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import { View, Image, TextInput, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import { database } from '../../../firebaseConfig';
 import { ref, set } from 'firebase/database';
 import { auth } from '../../../firebaseConfig';
@@ -34,45 +35,59 @@ const UpdateProfil = ({ route, navigation }) => {
     };
 
     return (
+
         <View style={styles.container}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <MaterialIcons name="arrow-back" size={32} color="black" />
-            </TouchableOpacity>
-            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nom" />
+            <View style={}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <MaterialIcons name="arrow-back" size={24} color="black" />
+                </TouchableOpacity>
+            </View>
+
+            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nom Complet" />
+            <TextInput style={styles.input} value={firstname} onChangeText={setFirstname} placeholder="Prénom" />
             <TextInput style={styles.input} value={firstname} onChangeText={setFirstname} placeholder="Prénom" />
             <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
-                <Text style={styles.saveButtonText}>Enregistrer les modifications</Text>
+                <Text style={styles.saveButtonText}>ENREGISTER</Text>
             </TouchableOpacity>
         </View>
     );
 };
 
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 40,
-        backgroundColor: 'white',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#F5F5F5', // Couleur de fond similaire à InfoProfil
+    },
+    profilePic: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        marginBottom: 20,
     },
     input: {
         borderWidth: 1,
-        borderColor: 'orange',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 15,
-        fontSize: 16,
-    },
-    saveButton: {
-        backgroundColor: 'orange',
+        borderColor: '#E0E0E0',
         padding: 15,
         borderRadius: 5,
+        marginBottom: 15,
+        width: '80%',
+        fontSize: 18,
+        backgroundColor: '#FFFFFF', // Fond blanc
+    },
+    saveButton: {
+        backgroundColor: '#0C0DFF', // Style de bouton similaire
+        padding: 15,
+        borderRadius: 8,
         alignItems: 'center',
         marginTop: 20,
+        width: '80%',
     },
     saveButtonText: {
         color: 'white',
         fontSize: 18,
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
 });
 

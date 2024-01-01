@@ -1,36 +1,7 @@
-// import React, { useState } from 'react';
-// import { View, TextInput, Button, Text } from 'react-native';
-// import { chatWithOpenAi } from '../../../api';
-
-// const Talk = () => {
-//     const [userInput, setUserInput] = useState('');
-//     const [response, setResponse] = useState('');
-
-//     const handleSend = async () => {
-//         const preprompt = "Réponds comme si tu étais Superman: ";
-//         const fullMessage = preprompt + userInput;
-//         const aiResponse = await chatWithOpenAi(fullMessage);
-//         setResponse(aiResponse);
-//     };
-
-//     return (
-//         <View>
-//             <TextInput
-//                 placeholder="Posez votre question à Superman..."
-//                 value={userInput}
-//                 onChangeText={setUserInput}
-//             />
-//             <Button title="Envoyer" onPress={handleSend} />
-//             <Text>Réponse de Superman: {response}</Text>
-//         </View>
-//     );
-// };
-
-// export default Talk;
-
+// /Users/macbook/bachelor3/app-hybride/DreamTalk/src/screens/talks/Talk.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
-import { getDatabase, ref, push, get, onValue } from 'firebase/database'; // Importez les fonctions nécessaires
+import { getDatabase, ref, push, get, onValue } from 'firebase/database';
 import { auth } from '../../../firebaseConfig';
 
 const Talk = ({ route, navigation }) => {
