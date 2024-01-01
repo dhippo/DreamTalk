@@ -99,8 +99,6 @@ const Talk = ({ route, navigation }) => {
                             content: response.response
                         }];
                         // enregistrer le msg dans la base de donnée
-                        const newMessageRef = push(ref(database, `talks/${talkId}/messages`));
-                        const lastMsgRef = ref(database, `talks/${talkId}/lastMessage`);
                         await set(newMessageRef, {
                             senderId: "assistant",
                             text: response.response,
@@ -179,11 +177,11 @@ const Talk = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1, // Assurez-vous que le conteneur parent prend toute la place
-        backgroundColor: '#fff', // ou toute autre couleur de fond
+        backgroundColor: '#EDEEF0', // ou toute autre couleur de fond
     },
     messagesList: {
         flex: 1, // La FlatList doit prendre tout l'espace disponible
-        backgroundColor: '#dae0e5', // ou toute autre couleur de fond
+        backgroundColor: '#EDEEF0', // ou toute autre couleur de fond
     },
     messageSendItem: {
         padding: 10,

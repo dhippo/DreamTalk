@@ -82,6 +82,8 @@ const Talks = ({ navigation }) => {
 
                         <Text style={styles.talkName}>{item.userReicever}</Text>
                         <Text style={styles.lastMsg}>{item.lastMessage}</Text>
+                        {/* afficher l'icone flechTalks */}
+                        <Image style={styles.fleche} source={require('../../../assets/icons/flecheTalks.png')} />
                         {/* <Text style={styles.talkName}>{item.lastMessage}</Text> */}
                         {/* Affichez ici d'autres informations pertinentes concernant le 'talk' */}
                     </TouchableOpacity>
@@ -103,7 +105,7 @@ const Talks = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#EDEEF0',
         position: 'relative',
         padding: 15,
     },
@@ -113,42 +115,49 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     talkItem: {
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
-        backgroundColor: '#a8d9e2',
+        padding: 15,
+        borderRadius: 20,
+        backgroundColor: '#FFFFFF',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        marginStart: 10,
-        height: 70,
-        width: '100%',
+        marginStart: 5,
+        height: 90,
+        width: '100',
         marginBottom: 10,
     },
     talkImage: {
-        width: 45,
-        height: 45,
+        width: 50,
+        height: 50,
         borderRadius: 25,
         position: 'absolute',
         backgroundColor: 'grey',
-        top: 13,
+        top: 20,
         marginStart: 10,
     },
     talkName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'red',
+        color: '#252525',
         width: 270,
-        backgroundColor: 'grey',
+        // backgroundColor: 'grey',
         marginStart: 60,
 
     },
     lastMsg: {
         color: '#666',
         fontSize: 12,
-        backgroundColor: 'orange',
-        maxWidth: 270,
+        // backgroundColor: 'orange',
+        top: 10,
+        maxWidth: 250,
         maxHeight: 40,
-        marginStart: 70,
+        marginStart: 60,
+    },
+    fleche: {
+        width: 18,
+        height: 18,
+        marginStart: 345,
+        top: '-50%',
+        // right: 10,
     },
     emptyList: {
         flex: 1,

@@ -36,6 +36,7 @@ export default function Navigation() {
                 tabBarStyle: {
                      height: 80, // Hauteur personnalisée de la barre de navigation
                 },
+                headerShown: false,
             })}
         >
             <Tab.Screen name="Contacts" component={ContactsStack} />
