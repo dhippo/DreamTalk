@@ -69,7 +69,7 @@ const Talks = ({ navigation }) => {
         
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Liste des discussions</Text>
+            <Text style={styles.header}>Discussions</Text>
 
             <FlatList
                 data={talks}
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginStart: 5,
         height: 90,
-        width: '100',
+        width: '100%',
         marginBottom: 10,
     },
     talkImage: {

@@ -28,7 +28,7 @@ let app;
 if (!getApps().length) {
     app = initializeApp(firebaseConfig);
     initializeAuth(app, {
-        // persistence: getReactNativePersistence(AsyncStorage)
+        persistence: getReactNativePersistence(AsyncStorage)
     });
 } else {
     app = getApps()[0];
