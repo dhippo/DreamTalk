@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image, View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { forceLongPolling, onValue, ref, get } from 'firebase/database';
 import { database } from '../../../firebaseConfig';
@@ -23,6 +23,7 @@ const Talks = ({ navigation }) => {
 
                     const data = snapshot.val();
                     if (data) {
+                        // Compter le nombre de participants
                         const talksPromises = Object.keys(data).map(async (key) => {
                             // Références séparées pour participants et lastMessage
                             const participantsRef = ref(database, `talks/${key}/participants`);
@@ -69,9 +70,22 @@ const Talks = ({ navigation }) => {
         
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Discussions</Text>
+            {/* container btn retour + text  */}
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.btnBack} onPress={() => navigation.goBack()}>
+                    <Image style={{ width: 30, height: 30}} source={require('../../../assets/icons/btnBack.png')} />
+                </TouchableOpacity>
+                <Text style={{marginStart: 95, fontSize:30}}>Discussions</Text>
+            </View>
+            {/* <View style={{ borderBottomColor: 'black', borderBottomWidth: 1, left: 10, width: '95%', top:60 }} /> */}
 
-            <FlatList
+            <TextInput
+                style={styles.searchBar}
+                // value={"searchText"}
+                // onChangeText={"setSearchText"}
+                placeholder="Recherche"
+            />
+            <FlatList style={styles.talksList}
                 data={talks}
                 renderItem={({ item }) => (
                     <TouchableOpacity
@@ -105,14 +119,51 @@ const Talks = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingTop: 15,
         backgroundColor: '#EDEEF0',
         position: 'relative',
-        padding: 15,
+        // padding: 15,
     },
     header: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 20,
+        flexDirection: 'row',
+        // justifyContent: 'center',
+        alignItems: 'center',
+        top: 50,
+        // backgroundColor: 'green',
+        // top: 35,
+        // fontSize: 30,
+        // fontWeight: 'bold',
+        // marginBottom: 10,
+    },
+    btnBack: {
+        left: 10,
+        width: 40,
+        height: 40,
+        // padding: 5,
+        backgroundColor: '#FFFEFE',  
+        borderWidth: 1,
+        borderColor: 'black',
+        borderRadius: 10,
+        paddingStart: 4,
+        paddingTop: 4,
+    },
+    searchBar: {
+        top: 60,
+        height: 40,
+        width: '95%',
+        borderWidth: 1,
+        paddingLeft: 20,
+        margin: 10,
+        borderRadius: 10,
+
+        backgroundColor: 'white',
+    },
+    talksList: {
+        padding: 15,
+        flex: 1,
+        width: '100%',
+        marginTop: 70,
+        // backgroundColor: 'red',
     },
     talkItem: {
         padding: 15,
@@ -120,7 +171,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        marginStart: 5,
         height: 90,
         width: '100%',
         marginBottom: 10,
