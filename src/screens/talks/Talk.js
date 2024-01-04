@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
+import { Image, View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { set, ref, push, get, onValue } from 'firebase/database'; // Importez les fonctions nécessaires
 import { auth } from '../../../firebaseConfig';
 import { database } from '../../../firebaseConfig';
 import { chatWithOpenAi } from '../../../api';
+import LinearGradient from 'react-native-linear-gradient';
+
 const Talk = ({ route, navigation }) => {
     const userId = auth.currentUser.uid;
     const { talkId, userReicever } = route.params;
@@ -19,9 +21,9 @@ const Talk = ({ route, navigation }) => {
     useEffect(() => {
         get(contactsRef).then((snapshot) => {
             if (snapshot.exists()) {
-                const contacts = Object.values(snapshot.val());
+                 const contacts = Object.values(snapshot.val());
                 const contact = contacts.find((c) => c.name === userReicever);
-                setTypeContact(contact ? contact.type : 'Type non trouvé');
+                setTypeContact(contact ? contact.type : 'user');
             } else {
                 console.log("Aucun contact trouvé.");
             }
@@ -45,6 +47,7 @@ const Talk = ({ route, navigation }) => {
                 const initialMessages = processSnapshot(snapshot);
                 // on initie les msgs dans "messages"
                 setMessages(initialMessages);
+                console.log(messages);
                 // on initie les msgs dans "lastMsgsApi" pour le futur envoie à l'api
                 setlastMsgsApi(initialMessages.map(msg => ({
                     role: msg.senderId === userId ? "user" : "assistant",
@@ -72,12 +75,12 @@ const Talk = ({ route, navigation }) => {
             const lastMsgRef = ref(database, `talks/${talkId}/lastMessage`);
             
             try {
-                await set(newMessageRef, {
+                set(newMessageRef, {
                     senderId: userId,
                     text: text,
                     timestamp: Date.now(),
                 });
-                await set(lastMsgRef, text);
+                set(lastMsgRef, text);
                 setInputText('');
 
                 // Si on parle à un agent
@@ -85,11 +88,12 @@ const Talk = ({ route, navigation }) => {
                     console.log("Msg envoyé à un agent");
                     const newMsgs = [...lastMsgsApi, {
                         role: "system",
-                        content: `Je suis un utilisateur qui veux parler à ${userReicever}, je veux donc que tu incarnes ${userReicever} en integrant toute sa personnalité, sa vie, toutes ses connaissances et tout son savoir. Tu dois avoir ses traits de caractère, son vocabulaire et son style. Tu dois t’exprimer exactement comme si je m’adressais à ${userReicever} en utilisant son vocabulaire. Tes réponses doivent être cohérentes avec la personnalité de ${userReicever}. Tu dois absolument retenir toute notre conversation. Tes reponses ne doivent pas depasser 100 caractertes à par si tu as vriaiment besoin de plus pour répondre à une question qui te demande de developper.`
+                        content: `Je suis un utilisateur qui veux parler à ${userReicever}, je veux donc que tu incarnes ${userReicever} en integrant toute sa personnalité, sa vie, toutes ses connaissances et tout son savoir. Tu dois avoir ses traits de caractère, son vocabulaire et son style, c'est très important! Tu dois t’exprimer exactement comme si je m’adressais à ${userReicever} en utilisant son vocabulaire et ses expressions. Tes réponses doivent être cohérentes avec la personnalité de ${userReicever}. Si il y'a un historique de la discussion, tu n'as plus besoin de te presenter. Tu dois absolument retenir toute notre conversation. Tes reponses ne doivent pas depasser 100 caractertes en moyenne, à par si tu as vriaiment besoin de plus afin de répondre à une question qui te demande de developper.`
                     }, {
                         role: "user",
                         content: text
                     }];
+
                     const response = await chatWithOpenAi(newMsgs);
                     if (response.success) {
                         console.log("Reponse de l'api success");
@@ -98,7 +102,8 @@ const Talk = ({ route, navigation }) => {
                             role: "assistant",
                             content: response.response
                         }];
-                        // enregistrer le msg dans la base de donnée
+                        const newMessageRef = push(ref(database, `talks/${talkId}/messages`));
+
                         await set(newMessageRef, {
                             senderId: "assistant",
                             text: response.response,
@@ -106,15 +111,11 @@ const Talk = ({ route, navigation }) => {
                         });
                         await set(lastMsgRef, response.response);
 
-                        // setlastMsgsApi(newMsgs);
-                        // console.log(newMsgs);
+                        setlastMsgsApi(newMsgs);
                     } else {
                         console.log("Erreur lors de la communication avec OpenAI");
-                    }
-                    
-                    setlastMsgsApi(newMsgs);
-                    // console.log(newMsgs);
-
+                    }                    
+                //     setlastMsgsApi(newMsgs);
                 }
 
             } catch (error) {
@@ -145,68 +146,130 @@ const Talk = ({ route, navigation }) => {
     };
 
     return (
-
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.container}
-            keyboardVerticalOffset={100}
-        >
-            <FlatList
-                inverted
-                data={messages}
-                renderItem={renderMessageItem}
-                keyExtractor={(item, index) => index.toString()}
-                style={styles.messagesList}
-            />
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    value={inputText}
-                    onChangeText={setInputText}
-                    placeholder="Écrivez votre message ici..."
-                />
-                <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-                    <Text style={styles.sendButtonText}>Envoyer</Text>
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.btnBack} onPress={() => navigation.goBack()}>
+                    <Image style={{ width: 30, height: 30}} source={require('../../../assets/icons/btnBack.png')} />
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.imgProfil} onPress={() => navigation.goBack()}>
+                    <Image style={{ width: 45, height: 45, borderRadius:20}} source={require('../../../assets/icons/welcome.png')} />
+                </TouchableOpacity>
+                <Text style={styles.name}>{userReicever}</Text>
+                <Text style={styles.type}>{typeContact}</Text>
+                
             </View>
-        </KeyboardAvoidingView>
+
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.keybord}
+                keyboardVerticalOffset={0}
+            >
+                <FlatList
+                    style={styles.messagesList}
+                    inverted
+                    data={messages}
+                    renderItem={renderMessageItem}
+                    keyExtractor={(item, index) => index.toString()}
+                />
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.input}
+                        value={inputText}
+                        onChangeText={setInputText}
+                        placeholder="Écrivez votre message ici..."
+                    />
+                    <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+                        <Text style={styles.sendButtonText}>Envoyer</Text>
+                    </TouchableOpacity>
+                </View>
+            </KeyboardAvoidingView>
+        </View>
 
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, // Assurez-vous que le conteneur parent prend toute la place
-        backgroundColor: '#EDEEF0', // ou toute autre couleur de fond
+        flex: 1,
+        paddingTop: 20,
+        // backgroundColor: '#FDFDFD',
+    },
+    header: {
+        top: 25,
+        height: 60,
+        marginBottom: 25,
+        flexDirection: 'column',
+        paddingTop: 10,
+        paddingHorizontal:130,
+        borderBottomWidth: 1,
+    },
+    btnBack: {
+        position: 'absolute',
+        top: 18,
+        left: 10,
+        width: 35,
+        height: 35,
+        borderWidth: 1,
+        borderColor: 'black',
+        borderRadius: 10,
+        paddingStart: 1,
+        paddingTop: 2,
+    },
+    imgProfil: {
+        top: 10,
+        marginLeft: 20,
+        // width: 45,
+        // height: 45,
+        position: 'absolute',
+        // backgroundColor: '#EDEEF0',
+        left: 50,
+    },
+    name: {
+        paddingTop: 2,
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'black',
+        // backgroundColor: 'yellow',
+    },
+    type: {
+        paddingTop: 3,
+        fontSize: 14,
+        color: 'grey',
+        // backgroundColor: 'red',
+
     },
     messagesList: {
-        flex: 1, // La FlatList doit prendre tout l'espace disponible
-        backgroundColor: '#EDEEF0', // ou toute autre couleur de fond
+        flex: 1,
+        backgroundColor: '#EDEEF0',
+        paddingHorizontal: 5,
     },
     messageSendItem: {
         padding: 10,
-        marginVertical: 2,
+        marginVertical: 5,
         marginEnd: 5,
         alignSelf: 'flex-end',
-        backgroundColor: '#0f815c', // Une couleur de fond pour que les messages soient visibles
+        backgroundColor: '#FDFDFD', // Une couleur de fond pour que les messages soient visibles
         flexDirection: 'row', // 
         maxWidth: '70%',
-        borderRadius: 5,
+        borderRadius: 10,
+        borderTopEndRadius: 0,
+
         // #f9fafb
     },
     messageSend: {
         fontSize: 16, // Assurez-vous que la taille de la police est suffisante pour être lue
-        color: 'white', // Assurez-vous que la couleur du texte contraste avec l'arrière-plan
+        color: 'black', // Assurez-vous que la couleur du texte contraste avec l'arrière-plan
     },
     messageReceiveItem: {
         padding: 10,
-        marginVertical: 2,
+        marginVertical: 5,
         marginStart: 5,
         alignSelf: 'flex-start',
-        backgroundColor: 'blue', // Une couleur de fond pour que les messages soient visibles
+        backgroundColor: '#3F89F8', // Une couleur de fond pour que les messages soient visibles
         flexDirection: 'row', // 
         maxWidth: '70%',
-        borderRadius: 5,
+        borderRadius: 10,
+        borderTopStartRadius: 0,
     },
     messageReceive: {
         fontSize: 16, // Assurez-vous que la taille de la police est suffisante pour être lue
@@ -215,9 +278,12 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         padding: 10,
-        backgroundColor: '#fff',
+        backgroundColor: '#FDFDFD',
         borderTopWidth: 1,
         borderColor: '#ddd',
+    },
+    keybord: {
+        flex: 1,
     },
     input: {
         flex: 1,
@@ -230,7 +296,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 10,
-        backgroundColor: '#0a5e43',
+        backgroundColor: '#3F89F8',
         borderRadius: 20,
     },
     sendButtonText: {

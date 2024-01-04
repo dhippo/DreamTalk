@@ -17,7 +17,7 @@ export const chatWithOpenAi = async (messages) => {
             model: "gpt-3.5-turbo",
             messages: messages,
             // messages: [{ role: "user", content: message }],
-            temperature: 0.7,
+            temperature: 0.8,
             max_tokens: 360
         });
         // afficher le nombre de token de la reponse dans les logs

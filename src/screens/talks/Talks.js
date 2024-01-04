@@ -5,9 +5,11 @@ import { forceLongPolling, onValue, ref, get } from 'firebase/database';
 import { database } from '../../../firebaseConfig';
 import { auth } from '../../../firebaseConfig';
 
+
 const Talks = ({ navigation }) => {
     const [talks, setTalks] = useState([]);
     const [username, setUserName] = useState([]);
+    const [searchText, setSearchText] = useState('');
     
     useEffect(() => {
         const fetchTalks = async () => {
@@ -36,8 +38,8 @@ const Talks = ({ navigation }) => {
                             var userReicever = "";
                             const userParticipant = participantsSnapshot.exists() ? participantsSnapshot.val() : {};
                             // On recuper le usernam a qui il parle
-                            userReicever = (username === Object.keys(userParticipant)[0]) ? Object.keys(userParticipant)[1] : Object.keys(userParticipant)[0];
-
+                            userReicever = (username === Object.keys(userParticipant)[0]) ? Object.keys(userParticipant)[0] : Object.keys(userParticipant)[1];
+                            console.log(Object.keys(userParticipant)[0]);
 
                             return {
                                 id: key,
@@ -57,7 +59,10 @@ const Talks = ({ navigation }) => {
         };
 
         fetchTalks();
+
     }, []);
+
+    //rafraichir la page lorsqu'on revient dessus
 
     const handleAddTalk = () => {
         navigation.navigate('NewTalk');
@@ -76,13 +81,16 @@ const Talks = ({ navigation }) => {
                     <Image style={{ width: 30, height: 30}} source={require('../../../assets/icons/btnBack.png')} />
                 </TouchableOpacity>
                 <Text style={{marginStart: 95, fontSize:30}}>Discussions</Text>
+                <TouchableOpacity style={styles.addButton} onPress={handleAddTalk}>
+                    <Image style={{ width: 40, height:40}} source={require('../../../assets/icons/newTalk.png')} />
+                </TouchableOpacity>
             </View>
             {/* <View style={{ borderBottomColor: 'black', borderBottomWidth: 1, left: 10, width: '95%', top:60 }} /> */}
 
             <TextInput
                 style={styles.searchBar}
-                // value={"searchText"}
-                // onChangeText={"setSearchText"}
+                value={searchText}
+                onChangeText={setSearchText}
                 placeholder="Recherche"
             />
             <FlatList style={styles.talksList}
@@ -106,11 +114,6 @@ const Talks = ({ navigation }) => {
                 keyExtractor={item => item.id}
                 ListEmptyComponent={renderEmptyList}
             />
-
-
-            <TouchableOpacity style={styles.addButton} onPress={handleAddTalk}>
-                <Text style={styles.addButtonText}>Nouvelle discussion</Text>
-            </TouchableOpacity>
         </View>
     );
 
@@ -122,30 +125,23 @@ const styles = StyleSheet.create({
         paddingTop: 15,
         backgroundColor: '#EDEEF0',
         position: 'relative',
-        // padding: 15,
     },
     header: {
         flexDirection: 'row',
-        // justifyContent: 'center',
         alignItems: 'center',
         top: 50,
-        // backgroundColor: 'green',
-        // top: 35,
-        // fontSize: 30,
-        // fontWeight: 'bold',
-        // marginBottom: 10,
     },
     btnBack: {
         left: 10,
-        width: 40,
-        height: 40,
+        width: 35,
+        height: 35,
         // padding: 5,
-        backgroundColor: '#FFFEFE',  
+        // backgroundColor: '#EBEBEB',  
         borderWidth: 1,
         borderColor: 'black',
         borderRadius: 10,
-        paddingStart: 4,
-        paddingTop: 4,
+        paddingStart: 1,
+        paddingTop: 2,
     },
     searchBar: {
         top: 60,
@@ -170,7 +166,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         backgroundColor: '#FFFFFF',
         flexDirection: 'column',
-        justifyContent: 'space-between',
+        // justifyContent: 'space-between',
         height: 90,
         width: '100%',
         marginBottom: 10,
@@ -219,18 +215,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     addButton: {
-        backgroundColor: '#0066cc',
-        padding: 15,
-        borderRadius: 5,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 20,
-    },
-    addButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        left: 90,
     }
+
 });
 
 

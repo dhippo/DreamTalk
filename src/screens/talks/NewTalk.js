@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
+import { Image, View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
 import { set, ref, push, get, update } from 'firebase/database';
 import { auth } from '../../../firebaseConfig';
 import { database } from '../../../firebaseConfig';
@@ -76,8 +76,13 @@ const NewTalk = ({ navigation }) => {
         })
     };
 
+    const handleAddTalk = () => {
+        navigation.navigate('NewContact');
+    };
+
     const renderItem = ({ item }) => (
         <View style={styles.itemContainer}>
+            <Image style={{ width: 30, height: 30, borderRadius:10}} source={require('../../../assets/icons/welcome.png')} />
             <View style={styles.contactInfo}>
                 <Text style={styles.name}>{item.name}</Text>
                 <Text style={styles.type}>{item.type}</Text>
@@ -93,13 +98,22 @@ const NewTalk = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.btnBack} onPress={() => navigation.goBack()}>
+                    <Image style={{ width: 30, height: 30}} source={require('../../../assets/icons/btnBack.png')} />
+                </TouchableOpacity>
+                <Text style={{marginStart: 95, fontSize:30}}>Discussions</Text>
+                <TouchableOpacity style={styles.addButton} onPress={handleAddTalk}>
+                    <Image style={{ width: 40, height:40}} source={require('../../../assets/icons/newTalk.png')} />
+                </TouchableOpacity>
+            </View>
             <TextInput
                 style={styles.searchBar}
                 value={searchText}
                 onChangeText={setSearchText}
                 placeholder="Recherche par nom..."
             />
-            <FlatList
+            <FlatList style={styles.contactsList}
                 data={contacts.filter(contact =>
                     contact.name.toLowerCase().includes(searchText.toLowerCase())
                 )}
@@ -113,31 +127,64 @@ const NewTalk = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        paddingTop: 15,
+        backgroundColor: '#EDEEF0',
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        top: 50,
+    },
+    btnBack: {
+        left: 10,
+        width: 35,
+        height: 35,
+        // padding: 5,
+        // backgroundColor: '#EBEBEB',  
+        borderWidth: 1,
+        borderColor: 'black',
+        borderRadius: 10,
+        paddingStart: 1,
+        paddingTop: 2,
+    },
+    addButton: {
+        left: 90,
     },
     searchBar: {
+        top: 60,
         height: 40,
+        width: '95%',
         borderWidth: 1,
         paddingLeft: 20,
         margin: 10,
-        borderColor: '#009688',
+        borderRadius: 10,
+
         backgroundColor: 'white',
+    },
+    contactsList: {
+        top: 80,
+        padding: 15,
+        width: '100%',
+        // backgroundColor: 'yellow',
     },
     itemContainer: {
         flexDirection: 'row',
-        padding: 10,
-        borderBottomWidth: 1,
-        borderColor: '#ccc',
+        padding: 15,
+        borderRadius: 20,
+        height: 70,
+        backgroundColor: '#FFFFFF',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        marginBottom: 10,
     },
     contactInfo: {
         flex: 1,
     },
     name: {
+        left: 10,
         fontSize: 18,
     },
     type: {
+        left: 10,
         fontSize: 14,
         color: 'grey',
     },
