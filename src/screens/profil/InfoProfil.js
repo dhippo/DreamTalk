@@ -4,7 +4,7 @@ import { auth } from '../../../firebaseConfig';
 import { MaterialIcons } from '@expo/vector-icons';
 import {onValue, ref} from "firebase/database";
 import { database } from '../../../firebaseConfig';
-
+import { LinearGradient } from 'expo-linear-gradient';
 
 const InfoProfil = ({ navigation }) => {
     const [userProfile, setUserProfile] = useState({
@@ -30,7 +30,7 @@ const InfoProfil = ({ navigation }) => {
                         name: data.name || '',
                         firstname: data.firstname || '',
                         username: data.username || '',
-                        email: userEmail  // Utilisation de l'email récupéré
+                        email: userEmail
                     });
                 }
             });
@@ -52,64 +52,107 @@ const InfoProfil = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.header}>Profil</Text>
-            <View style={styles.infoContainer}>
-                <Text style={styles.info}>Username : {userProfile.username}</Text>
-                <Text style={styles.info}>Nom : {userProfile.name}</Text>
-                <Text style={styles.info}>Prénom : {userProfile.firstname}</Text>
-                <Text style={styles.info}>Email : {userProfile.email}</Text>
+        <View style={profileStyles.container}>
+            <LinearGradient
+                colors={['#f414db', '#2a44ff']}
+                style={profileStyles.gradientHeader}
+            >
+                <Text style={profileStyles.headerTitle}>mon profil</Text>
+                <Text style={profileStyles.headerTitleEmail}>{userProfile.email}</Text>
+            </LinearGradient>
+
+            <View style={profileStyles.infoContainer}>
+                <Text style={profileStyles.infoLabel}>Pseudo :</Text>
+                <Text style={profileStyles.info}>{userProfile.username}</Text>
+
+                <Text style={profileStyles.infoLabel}>Nom :</Text>
+                <Text style={profileStyles.info}>{userProfile.name}</Text>
+
+                <Text style={profileStyles.infoLabel}>Prénom :</Text>
+                <Text style={profileStyles.info}>{userProfile.firstname}</Text>
 
             </View>
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('UpdateProfil', { userProfile })}>
-                <Text style={styles.buttonText}>Modifier le Profil</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Settings')}>
-                <Text style={styles.buttonText}>Modifier les Paramètres</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={handleLogout}>
-                <Text style={styles.buttonText}>Déconnexion</Text>
-            </TouchableOpacity>
+
+            <View style={profileStyles.buttonContainer}>
+                <TouchableOpacity style={profileStyles.button} onPress={() => navigation.navigate('UpdateProfil', { userProfile })}>
+                    <Text style={profileStyles.buttonText}>modifier le profil</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={profileStyles.button} onPress={() => navigation.navigate('Settings')}>
+                    <Text style={profileStyles.buttonText}>paramètres</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={profileStyles.button} onPress={handleLogout}>
+                    <Text style={profileStyles.buttonText}>déconnexion</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
 
-const styles = StyleSheet.create({
+const profileStyles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 40,
-        backgroundColor: 'white', // Fond blanc
+        backgroundColor: '#ffffff',
     },
-    header: {
+    gradientHeader: {
+        paddingVertical: 20,
+        paddingHorizontal: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerTitle: {
+        color: '#ffffff',
+        fontWeight: '900',
+        fontSize: 29,
+        marginBottom: 10,
+    },
+    headerTitleEmail: {
+        color: '#ffffff',
+        fontWeight: '600',
         fontSize: 26,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: 'black',
     },
     infoContainer: {
-        backgroundColor: 'white', // Fond blanc pour les infos
-        padding: 15,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white',
+        padding: 20,
         borderRadius: 5,
-        borderColor: 'orange', // Bordure orange
+        borderColor: '#000',
         borderWidth: 1,
-        marginBottom: 20,
+        textAlign: 'center',
+    },
+    infoLabel: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#000',
+        marginBottom: 5,
     },
     info: {
-        fontSize: 18,
+        fontSize: 16,
         marginBottom: 10,
-        color: 'black', // Texte noir pour contraste
+        color: '#000',
+    },
+    buttonContainer: {
+        display: 'flex',
+        width: '100%',
+        textAlign: 'center',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     button: {
-        backgroundColor: 'orange', // Bouton orange
+        width: '70%',
+        backgroundColor: '#000',
         padding: 15,
         borderRadius: 5,
         alignItems: 'center',
         marginTop: 10,
     },
     buttonText: {
-        color: 'white', // Texte blanc
+        color: "#fff",
+        fontWeight: "bold",
         fontSize: 18,
-        fontWeight: 'bold',
     },
 });
 
